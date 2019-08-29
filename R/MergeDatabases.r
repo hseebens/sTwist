@@ -2,200 +2,100 @@
 ## Merging databases of alien species distribution and first records
 ## merge datababases after harmonisation of species and country names 
 ##
-## Databases: GRIIS, GloNAF, FirstRecords, GAVIA
+## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, amphibians + reptiles
 ##
 ## sTwist workshop
-## Hanno Seebens, 28.03.2019
+## Hanno Seebens, 08.08.2019
 #########################################################################################
 
 
-MergeDatabases <- function(output,version){
+MergeDatabases <- function(FileInfo,version,output){
   
+  ## identify input datasets based on file name "StandardSpec_....csv"
+  allfiles <- list.files("Output/")
+  inputfiles_all <- allfiles[grep("StandardRegionNames_",allfiles)]
+  inputfiles <- vector()
+  for (i in 1:length(inputfiles_all)){
+    inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+  }
+  inputfiles <- inputfiles[!is.na(inputfiles)]
   
-  ## loading databases...
-  
-  griis <- read.table("Data/GRIIS_HarmSpecCountry.csv",header=T,stringsAsFactors = F,sep=";")
-  if (any(colnames(griis)=="OrigSpecies")) griis <- griis[,-which(colnames(griis)=="OrigSpecies")]
-  
-  firstrecords <- read.table("Data/FirstRecords_HarmSpecCountry.csv",stringsAsFactors = F,sep=";",header=T)#
-  if (any(colnames(firstrecords)=="OrigSpecies")) firstrecords <- firstrecords[,-which(colnames(firstrecords)=="OrigSpecies")]
-  
-  glonaf <- read.table("Data/GloNAF_HarmSpecCountry.csv",stringsAsFactors = F,sep=";",header=T)
-  if (any(colnames(glonaf)=="OrigSpecies")) glonaf <- glonaf[,-which(colnames(glonaf)=="OrigSpecies")]
-  
-  gavia <- read.table("Data/GAVIA_HarmSpecCountry.csv",stringsAsFactors = F,sep=";",header=T)
-  if (any(colnames(gavia)=="OrigSpecies")) gavia <- gavia[,-which(colnames(gavia)=="OrigSpecies")]
-  
-  amphrep <- read.table("Data/AmphRep_HarmSpecCountry.csv",header=T,stringsAsFactors = F,sep=";")
-  if (any(colnames(amphrep)=="OrigSpecies")) amphrep <- amphrep[,-which(colnames(amphrep)=="OrigSpecies")]
-  
-  
-  ##################################################################################
-  ### Merge all databases ##########################################################
-  
-  ## check country names among databases...
-  griis$GRIIS <- "x"
-  firstrecords$FirstRecordDB <- "x"
-  glonaf$GloNAF <- "x"
-  gavia$GAVIA <- "x"
-  amphrep$AmRep <- "x"
-  
-  all_countries <- merge(unique(griis[,c("Country","GRIIS")]),unique(firstrecords[,c("Country","FirstRecordDB")]),all=T)
-  all_countries <- merge(unique(all_countries),unique(glonaf[,c("Country","GloNAF")]),all=T)
-  all_countries <- merge(unique(all_countries),unique(gavia[,c("Country","GAVIA")]),all=T)
-  all_countries <- merge(unique(all_countries),unique(amphrep[,c("Country","AmRep","Group")]),all=T)
-  # all_countries[order(all_countries$Country),][166:(166+80),] # use this file to compare country names!
-  
-  
-  ### merge databases...
-  
-  all_records <- merge(griis,firstrecords,by=c("SpeciesGBIF","Country"),all=T)
-  all_records <- merge(all_records,glonaf,by=c("SpeciesGBIF","Country"),all=T)
-  all_records <- merge(all_records,gavia,by=c("SpeciesGBIF","Country"),all=T)
-  all_records <- merge(all_records,amphrep,by=c("SpeciesGBIF","Country"),all=T)
-  
-  all_records <- all_records[!is.na(all_records$SpeciesGBIF),] # remove entries without a GBIF record
-  all_records <- all_records[,c("SpeciesGBIF","LifeForm","Group","Country","Status","Habitat","GRIIS","FirstRecordDB","GloNAF","GAVIA","AmRep","GRIISFirstRecord"
-                                ,"FirstRecord","GRIISimpact_evidence","Country_ISO","TDWG1_name","Continent","Continent1","Continent2")]#
+  for (i in 1:length(inputfiles)){#
+    
+    dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
+    
+    cnames <- colnames(dat)
+    cnames <- cnames[!cnames%in%c("Species_name_orig","Region_name_orig","Kingdom","Country_ISO","GBIFSpeciesAuthor","GBIFstatus","ISO2","CountryID","Taxon_group")]
+    dat <- dat[,colnames(dat)%in%cnames]
 
-  ## fill some gaps with ISO codes 
-  isocodes <- unique(all_records[,c("Country","Country_ISO")])
-  isocodes <- subset(isocodes,!is.na(isocodes$Country_ISO))
-  all_records <- all_records[,-which(colnames(all_records)=="Country_ISO")]
-  all_records <- merge(all_records,isocodes,by="Country",all.x=T)
+    eval(parse(text=paste0("dat$",substitute(a,list(a=FileInfo[i,1])),"<-\"x\""))) # add column with database information
+    
+    if (i==1){
+      alldat <- dat
+    } else {
+      alldat <- merge(alldat,dat,by=c("Region_name","Species_name"),all=T)
+      if (any(grepl("\\.y",colnames(alldat)))){
+        if (any(colnames(alldat)=="First_record.x")){ # solve multiple first records
+          ## select the minimum of multiple first records
+          alldat$First_record <- apply(alldat[,c("First_record.x","First_record.y")],1,function(s) ifelse(all(is.na(s)),NA,min(s,na.rm=T)))
+          alldat <- alldat[,!colnames(alldat)%in%c("First_record.x","First_record.y")]
+        }
+        while(any(grepl("\\.y",colnames(alldat)))){ # check if discrepancy still exists
+          colname_dupl <- colnames(alldat)[grep("\\.y",colnames(alldat))][1] # identify duplicated column
+          colname_dupl <- gsub("\\..+$","",colname_dupl) # create new column new
+          colnames_dupl <- colnames(alldat)[grep(colname_dupl,colnames(alldat))] # identify .x and .y component
+          ## merge both columns into a new one by combining the content separated by ';'
+          eval(parse(text=paste0("alldat$",substitute(a,list(a=colname_dupl)),"<-paste(alldat$",substitute(a,
+                        list(a=colname_dupl)),".x,alldat$",substitute(a,list(a=colname_dupl)),".y,sep=\";\")"))) # add column with database information
+          alldat <- alldat[,!colnames(alldat)%in%colnames_dupl] # remove .x and .y columns
+          alldat[,colname_dupl] <- gsub(";NA","",alldat[,colname_dupl]) # clean new column
+          alldat[,colname_dupl] <- gsub("NA;","",alldat[,colname_dupl]) # clean new column
+        }
+      }
+    }
+  }
   
-  ## the following countries do not have an ISO code yet in the database:
-  # [1] "Andaman and Nicobar"                    "Andorra"                                "Anguilla"                               "Antigua and Barbuda"                   
-  # [5] "Azerbaijan"                             "Bahrain"                                "Barbados"                               "Bhutan"                                
-  # [9] "Bosnia and Herzegovina"                 "Brunei Darussalam"                      "Cambodia"                               "Cape Verde"                            
-  # [13] "Cayman Islands (the)"                   "Clipperton Island"                      "Comoros (the)"                          "Dominica"                              
-  # [17] "East Timor"                             "El Salvador"                            "Falkland Islands"                       "Gibraltar"                             
-  # [21] "Grenada"                                "Guadeloupe"                             "Guam"                                   "Guatemala"                             
-  # [25] "Haiti"                                  "Honduras"                               "Iraq"                                   "Jordan"                                
-  # [29] "Kazakhstan"                             "Kuwait"                                 "Lao People's Democratic Republic (the)" "Lebanon"                               
-  # [33] "Maldives"                               "Martinique"                             "Mayotte"                                "Micronesia, Federated States of"       
-  # [37] "Monaco"                                 "Montenegro"                             "Mozambique"                             "Myanmar"                               
-  # [41] "Nicaragua"                              "Niue"                                   "Norfolk Islands"                        "Northern Mariana Islands (the)"        
-  # [45] "Pakistan"                               "Palau"                                  "Palestinian Territory, Occupied"        "Peru"                                  
-  # [49] "Saint-Barthelemy"                       "Saint Kitts and Nevis"                  "Saint Lucia"                            "Saint-Martin"                          
-  # [53] "Saint Vincent and the Grenadines"       "San Marino"                             "Serbia"                                 "Society Islands"                       
-  # [57] "Solomon Islands"                        "South Sudan"                            "Sulawesi"                               "Syria"                                 
-  # [61] "Timor Leste"                            "Tokelau"                                "Trinidad and Tobago"                    "Turkmenistan"                          
-  # [65] "Turks and Caicos Islands (the)"         "Tuvalu"                                 "Uzbekistan"                             "Vanuatu"                               
-  # [69] "Vietnam"                                "Wallis and Futuna"        
+  ## remove duplicated entries
+  ind_dupl <- duplicated(alldat) # remove identical lines
+  alldat <- alldat[!ind_dupl,]
   
-  # sort(table(all_records[is.na(all_records$GRIIS),]$Country))
-  
-  
-  ## fill some gaps with TDWG1 names 
-  TDWG1 <- unique(all_records[,c("Country","TDWG1_name")])
-  TDWG1 <- unique(subset(TDWG1,!is.na(TDWG1$TDWG1_name)))
-  TDWG1$TDWG1_name[TDWG1$Country=="Chile"] <- "Southern America"
-  TDWG1$TDWG1_name[TDWG1$Country=="French Polynesia"] <- "Pacific"
-  TDWG1$TDWG1_name[TDWG1$Country=="Portugal"] <- "Europe"
-  TDWG1$TDWG1_name[TDWG1$Country=="Russian Federation (the)"] <- "Asia-Temperate"
-  TDWG1$TDWG1_name[TDWG1$Country=="Saint Helena, Ascension and Tristan da Cunha"] <- "Africa"
-  TDWG1$TDWG1_name[TDWG1$Country=="South Africa"] <- "Africa"
-  TDWG1$TDWG1_name[TDWG1$Country=="Spain"] <- "Europe"
-  TDWG1$TDWG1_name[TDWG1$Country=="United States Minor Outlying Islands (the)"] <- "Pacific"
-  TDWG1$TDWG1_name[TDWG1$Country=="United States of America (the)"] <- "Northern America"
-  TDWG1 <- unique(TDWG1)
-  all_records <- all_records[,-which(colnames(all_records)=="TDWG1_name")]
-  all_records <- merge(all_records,TDWG1,by="Country",all.x=T)
-  
-  ## fill some gaps with continent names 
-  Continent_names <- unique(all_records[,c("Country","Continent")])
-  Continent_names <- subset(Continent_names,!is.na(Continent_names$Continent))
-  Continent_names$Continent[Continent_names$Country=="French Southern Territories (the)"] <- "Antarctica"
-  Continent_names$Continent[Continent_names$Country=="New Zealand"] <- "Australasia"
-  Continent_names$Continent[Continent_names$Country=="Saint Helena, Ascension and Tristan da Cunha"] <- "Africa"
-  Continent_names$Continent[Continent_names$Country=="United States of America (the)"] <- "North America"
-  Continent_names <- unique(Continent_names)
-  all_records <- all_records[,-which(colnames(all_records)=="Continent")]
-  all_records <- merge(all_records,Continent_names,by="Country",all.x=T)
-  
-  ## fill some gaps with continent names 
-  Continent1_names <- unique(all_records[,c("Country","Continent1")])
-  Continent1_names <- subset(Continent1_names,!is.na(Continent1_names$Continent1))
-  Continent1_names$Continent1[Continent1_names$Country=="Denmark"] <- "Europe"
-  Continent1_names$Continent1[Continent1_names$Country=="French Southern Territories (the)"] <- "Antarctica"
-  Continent1_names$Continent1[Continent1_names$Country=="New Zealand"] <- "Australasia"
-  Continent1_names$Continent1[Continent1_names$Country=="Saint Helena, Ascension and Tristan da Cunha"] <- "Africa"
-  Continent1_names$Continent1[Continent1_names$Country=="United States of America (the)"] <- "Northern America"
-  Continent1_names <- unique(Continent1_names)
-  all_records <- all_records[,-which(colnames(all_records)=="Continent1")]
-  all_records <- merge(all_records,Continent1_names,by="Country",all.x=T)
-  
-  ## fill some gaps with continent names 
-  Continent2_names <- unique(all_records[,c("Country","Continent2")])
-  Continent2_names <- subset(Continent2_names,!is.na(Continent2_names$Continent2))
-  ind <- which(duplicated(Continent2_names$Country))
-  Continent2_names$Continent2[Continent2_names$Country=="Denmark"] <- "Europe"
-  Continent2_names$Continent2[Continent2_names$Country=="French Southern Territories (the)"] <- "Antarctica"
-  Continent2_names$Continent2[Continent2_names$Country=="New Zealand"] <- "Australasia"
-  Continent2_names$Continent2[Continent2_names$Country=="Saint Helena, Ascension and Tristan da Cunha"] <- "Africa"
-  Continent2_names$Continent2[Continent2_names$Country=="United States of America (the)"] <- "Northern America"
-  Continent2_names <- unique(Continent2_names)
-  
-  all_records <- all_records[,-which(colnames(all_records)=="Continent2")]
-  all_records <- merge(all_records,Continent2_names,by="Country",all.x=T)
-  
-  ## remove NAs for output...
-  all_records[is.na(all_records)] <- ""
-  
-  ## harmonse life forms...
-  # colnames(all_records)[colnames(all_records)=="LifeForm.y"] <- "LifeForm"
-  all_records[all_records$GloNAF=="x",]$LifeForm <- "Vascular plants"
-  all_records[all_records$GAVIA=="x",]$LifeForm <- "Birds"
-  all_records[all_records$AmRep=="x" & all_records$Group=="Amphibia",]$LifeForm <- "Amphibians"
-  all_records[all_records$AmRep=="x" & all_records$Group=="Reptilia",]$LifeForm <- "Reptiles"
-  # all_records[is.na(all_records$LifeForm),]$LifeForm <- all_records[is.na(all_records$LifeForm),]$LifeForm.x
-  # all_records$LifeForm.x <- NULL
-  # ind <- is.na(all_records$LifeForm) & (all_records$GloNAF=="x" | all_records$GAVIA=="x" | all_records$FirstRecordDB=="x" | all_records$AmRep=="x")
-  # all_records[ind,]
-  
-  all_records$LifeForm[all_records$LifeForm=="Vascular plant"] <- "Vascular plants"
-  all_records$LifeForm[all_records$LifeForm=="Insect"] <- "Insects"
-  all_records$LifeForm[all_records$LifeForm=="Bird"] <- "Birds"
-  all_records$LifeForm[all_records$LifeForm=="Alga"] <- "Algae"
-  all_records$LifeForm[all_records$LifeForm=="Amphibian"] <- "Amphibians"
-  all_records$LifeForm[all_records$LifeForm=="Bacterium"] <- "Bacteria and protozoans"
-  all_records$LifeForm[grep(" fish",all_records$LifeForm)] <- "Fishes"
-  all_records$LifeForm[all_records$LifeForm=="Copepod"] <- "Crustacean"
-  all_records$LifeForm[all_records$LifeForm=="Mammal"] <- "Mammals"
-  all_records$LifeForm[all_records$LifeForm=="Mollusc"] <- "Molluscs"
-  all_records$LifeForm[all_records$LifeForm=="Protozoan"] <- "Bacteria and protozoans"
-  all_records$LifeForm[all_records$LifeForm=="Reptile"] <- "Reptiles"
-  all_records$LifeForm[all_records$LifeForm=="Virus"] <- "Viruses"
-  
-  ## fill some gaps with lifeform names 
-  lifeforms <- unique(all_records[,c("SpeciesGBIF","LifeForm")])
-  lifeforms <- unique(subset(lifeforms,lifeforms$LifeForm!=""))
-  # all_records[all_records$SpeciesGBIF=="Lecanosticta acicola",]
-  
-  ## quick-and-dirty solution to remove wrong entries of life forms; needs to be changed in first record dabase!
-  ind <- which(duplicated(lifeforms$SpeciesGBIF))
-  dupl_spec <- lifeforms[ind,]
-  lifeforms$LifeForm[lifeforms$SpeciesGBIF%in%dupl_spec$SpeciesGBIF] <- ""
-  lifeforms <- unique(subset(lifeforms,lifeforms$LifeForm!=""))
+  ind_dupl <- duplicated(alldat[,c("Species_name","Region_name")]) # remove duplicated species-region combinations
+  all_dat_dupl <- unique(alldat[ind_dupl,c("Species_name","Region_name")])
+  ind_rm <- col_dupl <- vector()
+  for (j in 1:nrow(all_dat_dupl)){
+    ind_each <- which(alldat$Species_name==all_dat_dupl$Species_name[j] & alldat$Region_name==all_dat_dupl$Region_name[j])
+    for (k in 1:dim(alldat)[2]){
+      if (colnames(alldat)[k]%in%c("Region_name","Species_name")) next
+      if (all(is.na(alldat[ind_each,k]))) next # skip if all NA
+      if (all(grepl(alldat[ind_each,k][1],alldat[ind_each,k]))){ # skip if all equal (non-NA)
+        next 
+      } else {
+        alldat[ind_each,k][1] <- paste(alldat[ind_each,k],collapse="; ") # concatenate unequal row entries
+        ind_rm <- c(ind_rm,ind_each[-1]) # collect rows to remove (all except the first one)
+        col_dupl <- c(col_dupl,colnames(alldat)[k]) # store column with deviating information for report
+      }
+    }
+  }
+  alldat <- alldat[-ind_rm,] # remove all duplicates
+  if (length(col_dupl)>0) print(paste0("Warning: Deviating information for the same species. Check column '",unique(col_dupl),"' in final data set."))
 
-  all_records <- all_records[,-which(colnames(all_records)=="LifeForm")]
-  all_records <- merge(all_records,lifeforms,by="SpeciesGBIF",all.x=T)
-  
-  all_records$LifeForm[is.na(all_records$LifeForm)] <- ""
-  
-  # table(is.na(all_records$LifeForm))
-  # sort(names(table(all_records$LifeForm)))
-  
-  
+
   ## output #############################################
-  
-  ## remove NAs for output...
-  all_records[is.na(all_records)] <- ""
-  all_records$GRIISimpact_evidence[all_records$GRIISimpact_evidence=="Null"] <- ""
 
-  all_records <- all_records[,c("SpeciesGBIF","LifeForm","Country","Status","Habitat","GRIIS","FirstRecordDB","GloNAF","GAVIA","AmRep","GRIISFirstRecord",
-                                "FirstRecord","GRIISimpact_evidence","Country_ISO","TDWG1_name","Continent","Continent1","Continent2")]#
+  all_addit_cols <- paste(FileInfo$Column_additional,collapse="; ")
+  all_addit_cols <- unlist(strsplit(all_addit_cols,"; "))
+  all_addit_cols <- all_addit_cols[all_addit_cols!="NA"]
+  columns_out <- c("Region_name","Species_name","First_record",FileInfo[,1],all_addit_cols)
+
+  alldat_out <- alldat[,columns_out]
+  alldat_out[is.na(alldat_out)] <- ""
   
-  write.table(all_records,paste("Data/AlienSpecies_MultipleDBs_Masterfile_vs",version,".csv",sep=""),sep=";",row.names=F)
+  write.table(alldat_out,paste("Output/AlienSpecies_MultipleDBs_Masterfile_vs",version,".csv",sep=""),row.names=F)
+  
+  ## delete intermediate results if selected ########
+  if (!output) {
+    interm_res <- list.files("Output/")
+    interm_res <- interm_res[grep("Standard",interm_res)]
+    file.remove(paste0("Output/",interm_res))
+  }
 }
