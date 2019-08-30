@@ -16,8 +16,8 @@ ReplaceCountryNames_AmphRep <- function(cdat) {
 
   cdat$Region_name_orig[cdat$Code=="AGE-CO"] <- "Argentina"
   cdat$Region_name_orig[cdat$Region_name_orig=="Australian Capital Territory"] <- "Australia"
-  # cdat$Region_name_orig[cdat$Code=="Chile"] <- "Chile"
-  # cdat$Region_name_orig[cdat$Code=="India"] <- "India"
+  cdat$Region_name_orig[cdat$Code=="HAW-HI"] <- "Hawaiian Islands"
+  cdat$Region_name_orig[cdat$Code=="ASK-OO"] <- "Alaska"
   # cdat$Region_name_orig[cdat$Code=="Indonesia"] <- "Indonesia"
   # cdat$Region_name_orig[cdat$Code=="Japan"] <- "Japan"
   # cdat$Region_name_orig[cdat$Code=="China"] <- "China"
@@ -98,6 +98,8 @@ ReplaceCountryNames_AmphRep <- function(cdat) {
   
   # grep(" \\(the\\)",cdat$Region_name_orig)
   # cdat$Region_name_orig <- cdat$Country
+  
+  cdat <- cdat[,colnames(cdat)!="Code"]
   
   return(cdat)
 }

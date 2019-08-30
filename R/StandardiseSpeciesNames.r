@@ -1,13 +1,14 @@
 #########################################################################################
 ## Merging databases of alien species distribution and first records
-## standardisation of species names using the GBIF backbone taxonomy
 ##
+## Step 2: Standardisation of species names using the GBIF backbone taxonomy
+##
+## Species names are standardised according to the GBIF backbone taxonomy. The protocol 
+## to access GBIF and treat results is implemented in CheckGBIFTax.r.
 ## Script requires internet connection.
 ##
-## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, Alien amphibians and reptiles
-##
 ## sTwist workshop
-## Hanno Seebens et al., 06.08.2019
+## Hanno Seebens et al., 30.08.2019
 #########################################################################################
 
 
@@ -28,6 +29,9 @@ StandardiseSpeciesNames <- function (FileInfo){
   for (i in 1:length(inputfiles)){ # loop over inputfiles 
     
     dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
+    
+    dat <- dat[!is.na(dat$Species_name),]
+    dat <- dat[dat$Species_name!="",]
     dat$Species_name <- dat$Species_name_orig
     
     # remove subspecies etc #######################################
@@ -36,7 +40,7 @@ StandardiseSpeciesNames <- function (FileInfo){
     dat$Species_name <- gsub("[$,\xc2\xa0]", " ",dat$Species_name) # replace weird white space with recognised white space
     
     # loop over provided list of keywords to identify sub-species level information
-    subspIdent <- read.xlsx("Inputfiles/SubspecIdentifier.xlsx",colNames=F)[,1]
+    subspIdent <- read.xlsx("Config/SubspecIdentifier.xlsx",colNames=F)[,1]
     subspIdent <- gsub("\\.","",subspIdent)
     subspIdent <- c(subspIdent,paste0(subspIdent,"\\."))
     subspIdent <- paste0(paste("",subspIdent,""),".*$")
@@ -57,12 +61,12 @@ StandardiseSpeciesNames <- function (FileInfo){
     mismatches <- dat[[2]]
     
     ## export full species list with original species names and names assigned by GBIF for checking
-    fullspeclist <- rbind(fullspeclist,unique(DB[,c("Species_name_orig","Species_name","GBIFSpeciesAuthor","GBIFstatus","Family","Order","Class","Phylum","Kingdom")]))
+    fullspeclist <- rbind(fullspeclist,unique(DB[,c("Species_name_orig","Species_name","Species_author","GBIFstatus","Family","Order","Class","Phylum","Kingdom")]))
     
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
-    DB <- DB[,!colnames(DB)%in%c("GBIFSpeciesAuthor","GBIFstatus","Family","Order","Class","Phylum","Kingdom")]
+    DB <- DB[,!colnames(DB)%in%c("GBIFstatus","Order","Class","Phylum","Kingdom")]
     
-    write.table(mismatches,paste0("Output/MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"))
+    write.table(mismatches,paste0("Output/MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"),row.names=F,col.names=F)
     
     write.table(DB,paste0("Output/StandardSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"))
   }
@@ -70,5 +74,5 @@ StandardiseSpeciesNames <- function (FileInfo){
   oo <- order(fullspeclist$Kingdom,fullspeclist$Phylum,fullspeclist$Class,fullspeclist$Species_name)
   fullspeclist <- fullspeclist[oo,]
   
-  write.table(unique(fullspeclist),"Output/SpeciesNamesFullList.csv")
+  write.table(unique(fullspeclist),"Output/SpeciesNamesFullList.csv",row.names=F)
 }

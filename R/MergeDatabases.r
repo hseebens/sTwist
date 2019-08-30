@@ -13,7 +13,7 @@ MergeDatabases <- function(FileInfo,version,output){
   
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files("Output/")
-  inputfiles_all <- allfiles[grep("StandardRegionNames_",allfiles)]
+  inputfiles_all <- allfiles[grep("StandardFirstRecords_",allfiles)]
   inputfiles <- vector()
   for (i in 1:length(inputfiles_all)){
     inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
@@ -25,15 +25,21 @@ MergeDatabases <- function(FileInfo,version,output){
     dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
     
     cnames <- colnames(dat)
-    cnames <- cnames[!cnames%in%c("Species_name_orig","Region_name_orig","Kingdom","Country_ISO","GBIFSpeciesAuthor","GBIFstatus","ISO2","CountryID","Taxon_group")]
+    cnames <- cnames[!cnames%in%c("Species_name_orig","Region_name_orig","Kingdom","Country_ISO","GBIFstatus","ISO2","CountryID","Taxon_group")]
     dat <- dat[,colnames(dat)%in%cnames]
 
     eval(parse(text=paste0("dat$",substitute(a,list(a=FileInfo[i,1])),"<-\"x\""))) # add column with database information
     
+    # ## make column of species names and author if available for merging databases
+    # dat$spec_merge <- dat$Species_author
+    # dat$spec_merge[is.na(dat$spec_merge)] <- dat$Species_name[is.na(dat$spec_merge)]
+    
     if (i==1){
       alldat <- dat
     } else {
-      alldat <- merge(alldat,dat,by=c("Region_name","Species_name"),all=T)
+      
+      alldat <- merge(alldat,dat,by=c("Region_name","Species_name","Species_author","Family"),all=T) # merge databases
+
       if (any(grepl("\\.y",colnames(alldat)))){
         if (any(colnames(alldat)=="First_record.x")){ # solve multiple first records
           ## select the minimum of multiple first records
@@ -64,20 +70,22 @@ MergeDatabases <- function(FileInfo,version,output){
   ind_rm <- col_dupl <- vector()
   for (j in 1:nrow(all_dat_dupl)){
     ind_each <- which(alldat$Species_name==all_dat_dupl$Species_name[j] & alldat$Region_name==all_dat_dupl$Region_name[j])
-    for (k in 1:dim(alldat)[2]){
-      if (colnames(alldat)[k]%in%c("Region_name","Species_name")) next
+    for (k in 1:dim(alldat)[2]){ # loop over columns
+      if (colnames(alldat)[k]%in%c("Region_name","Species_name")) next # ignore these columns
       if (all(is.na(alldat[ind_each,k]))) next # skip if all NA
       if (all(grepl(alldat[ind_each,k][1],alldat[ind_each,k]))){ # skip if all equal (non-NA)
         next 
       } else {
-        alldat[ind_each,k][1] <- paste(alldat[ind_each,k],collapse="; ") # concatenate unequal row entries
+        if (!all(duplicated(alldat[ind_each,k])[-1])) { # check if entries deviate; if so, merge all into one string...
+          alldat[ind_each,k][1] <- paste(alldat[ind_each,k],collapse="; ") # concatenate unequal row entries
+          col_dupl <- c(col_dupl,colnames(alldat)[k]) # store column with deviating information for report
+        }
         ind_rm <- c(ind_rm,ind_each[-1]) # collect rows to remove (all except the first one)
-        col_dupl <- c(col_dupl,colnames(alldat)[k]) # store column with deviating information for report
       }
     }
   }
   alldat <- alldat[-ind_rm,] # remove all duplicates
-  if (length(col_dupl)>0) print(paste0("Warning: Deviating information for the same species. Check column '",unique(col_dupl),"' in final data set."))
+  if (length(col_dupl)>0) cat(paste0("\n Warning: Multiple entries for the same record. Check column '",unique(col_dupl),"' in final data set for entries separated by ';'. \n"))
 
 
   ## output #############################################
@@ -85,7 +93,11 @@ MergeDatabases <- function(FileInfo,version,output){
   all_addit_cols <- paste(FileInfo$Column_additional,collapse="; ")
   all_addit_cols <- unlist(strsplit(all_addit_cols,"; "))
   all_addit_cols <- all_addit_cols[all_addit_cols!="NA"]
-  columns_out <- c("Region_name","Species_name","First_record",FileInfo[,1],all_addit_cols)
+  if (any(colnames(alldat)=="First_record")){
+    columns_out <- c("Region_name","Species_name","Speciesx_author","First_record",FileInfo[,1],all_addit_cols)
+  } else {
+    columns_out <- c("Region_name","Species_name","Species_author",FileInfo[,1],all_addit_cols)
+  }
 
   alldat_out <- alldat[,columns_out]
   alldat_out[is.na(alldat_out)] <- ""

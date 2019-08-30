@@ -1,11 +1,13 @@
 #########################################################################################
 ## Merging databases of alien species distribution and first records
-## harmonisation of country names 
 ##
-## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, Alien amphibians and reptiles
+## Step 3: Standardisation of country names 
+##
+## Country names are standardised according to the specification provided in 
+## AllRegionsList.xlsx.
 ##
 ## sTwist workshop
-## Hanno Seebens, 06.08.2019
+## Hanno Seebens, 30.08.2019
 #########################################################################################
 
 
@@ -21,7 +23,7 @@ StandardiseCountryNames <- function(FileInfo){
   inputfiles <- inputfiles[!is.na(inputfiles)]
   
   ## load region table #################################################
-  regions <- read.xlsx("Inputfiles/AllRegionsList.xlsx",sheet=1,na.strings ="")
+  regions <- read.xlsx("Config/AllRegionsList.xlsx",sheet=1,na.strings ="")
   
   ## loop over all data set ############################################
   for (i in 1:length(inputfiles)){
@@ -117,6 +119,7 @@ StandardiseCountryNames <- function(FileInfo){
   }
   reg_names <- reg_names[reg_names$Region_name!=reg_names$Region_name_orig,] # export only region names deviating from the original
   reg_names <- unique(reg_names[order(reg_names$Region_name),])
+  colnames(reg_names) <- c("Region_name","Region_name_orig","Database")
   
   write.table(reg_names,"Output/TranslationRegionNames.csv",row.names=F)
 }

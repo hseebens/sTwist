@@ -74,20 +74,11 @@ PrepareDatasets <- function (FileInfo){
     if (!is.na(FileInfo[i,"Column_first_record1"]) & FileInfo[i,"Column_first_record1"]!=""){
       col_firstrecord_1 <- FileInfo[i,"Column_first_record1"]
       colnames(dat)[col_names_import==col_firstrecord_1] <- "First_record"
-      
-      ## test if all first records can be transferred to numeric
-      firstrec_test <- dat$First_record
-      firstrec_test <- firstrec_test[!is.na(firstrec_test)]
-      suppressWarnings( first2 <- as.numeric(firstrec_test))
-      if (any(is.na(first2))) print(paste("Warning: First records in",FileInfo[i,1],"contain non-numeric symbols. Converted to missing values."))
-      
-      suppressWarnings( dat$First_record <- as.numeric(dat$First_record))
       all_column_names <- c(all_column_names,"First_record")
     }
     if (!is.na(FileInfo[i,"Column_first_record2"]) & FileInfo[i,"Column_first_record2"]!=""){
       col_firstrecord_2 <- FileInfo[i,"Column_first_record2"]
       colnames(dat)[col_names_import==col_firstrecord_2] <- "First_record2"
-      dat$First_record2 <- as.numeric(dat$First_record2)
       all_column_names <- c(all_column_names,"First_record2")
     }
     if (!is.na(FileInfo[i,"Column_additional"]) & FileInfo[i,"Column_additional"]!=""){
