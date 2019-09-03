@@ -40,14 +40,14 @@ StandardiseSpeciesNames <- function (FileInfo){
     dat$Species_name <- gsub("[$,\xc2\xa0]", " ",dat$Species_name) # replace weird white space with recognised white space
     
     # loop over provided list of keywords to identify sub-species level information
-    subspIdent <- read.xlsx("Config/SubspecIdentifier.xlsx",colNames=F)[,1]
-    subspIdent <- gsub("\\.","",subspIdent)
-    subspIdent <- c(subspIdent,paste0(subspIdent,"\\."))
-    subspIdent <- paste0(paste("",subspIdent,""),".*$")
-    for (j in 1:length(subspIdent)){
-      ind <- grep(subspIdent[j],dat$Species_name)
-      dat$Species_name <- gsub(subspIdent[j],"",dat$Species_name)
-    }
+    # subspIdent <- read.xlsx("Config/SubspecIdentifier.xlsx",colNames=F)[,1]
+    # subspIdent <- gsub("\\.","",subspIdent)
+    # subspIdent <- c(subspIdent,paste0(subspIdent,"\\."))
+    # subspIdent <- paste0(paste("",subspIdent,""),".*$")
+    # for (j in 1:length(subspIdent)){
+    #   ind <- grep(subspIdent[j],dat$Species_name)
+    #   dat$Species_name <- gsub(subspIdent[j],"",dat$Species_name)
+    # }
 
     #### check griis names using 'rgibf' GBIF taxonomy ###########
     ## can be commented out to run without standardisation
@@ -66,9 +66,12 @@ StandardiseSpeciesNames <- function (FileInfo){
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
     DB <- DB[,!colnames(DB)%in%c("GBIFstatus","Order","Class","Phylum","Kingdom")]
     
-    write.table(mismatches,paste0("Output/MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"),row.names=F,col.names=F)
-    
     write.table(DB,paste0("Output/StandardSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"))
+    
+    oo <- order(mismatches$Species_name)
+    mismatches <- unique(mismatches[oo,])
+    
+    write.table(mismatches,paste0("Output/MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"),row.names=F,col.names=F)
   }
   
   oo <- order(fullspeclist$Kingdom,fullspeclist$Phylum,fullspeclist$Class,fullspeclist$Species_name)

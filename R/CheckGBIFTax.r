@@ -13,10 +13,10 @@ CheckGBIFTax <- function(dat){
   dat$Class <- NA
   dat$Order <- NA
   dat$Phylum <- NA
-  dat$Kingdom <- NA
+  dat$Kingdom <- NA # may match user-defined column!
   
-  if (any(colnames(dat)=="Kingdom")){
-    speclist_lifeform <- unique(dat[,c("Species_name","Kingdom")])
+  if (any(colnames(dat)=="Kingdom_user")){
+    speclist_lifeform <- unique(dat[,c("Species_name","Kingdom_user")])
     speclist <- speclist_lifeform$Species_name
   } else if (any(colnames(dat)=="Author")){
     speclist <- unique(paste(dat$Species_name,dat$Author))
@@ -24,13 +24,13 @@ CheckGBIFTax <- function(dat){
     speclist <- unique(dat$Species_name)
   }
   n_species <- length(speclist)
-  
+
   #setup progress bar
   pb <- txtProgressBar(min=0, max=n_species, initial=0,style = 3)
   
   options(warn=-1) # the use of 'tibbles' data frame generates warnings as a bug; if solved this options() should be turned off
   
-  mismatches <- vector()
+  mismatches <- data.frame(Species_name=NA,status=NA,matchType=NA)
   for (j in 1:n_species){# loop over all species names; takes some hours...
     
     # select species name and download taxonomy
@@ -44,16 +44,35 @@ CheckGBIFTax <- function(dat){
     
     # select only accepted names and exact matches
     if (any(db$status=="ACCEPTED" & db$matchType=="EXACT") & (any(colnames(db)=="species") | any(colnames(db)=="canonicalName"))){ 
-      if (any(colnames(db)=="species")) dat$Species_name[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$species[1]
-      if (any(colnames(db)=="canonicalName")) dat$Species_name[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$canonicalName[1] # species name is sometimes missing (e.g. Anemone sylvestris); option only possible for exact matches
-      dat$Species_author[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$scientificName[1]
-      dat$GBIFstatus[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$status[1]
+      if (any(colnames(db)=="species")){
+        dat$Species_name[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$species[1]
+      } else {
+        if (any(colnames(db)=="canonicalName")) dat$Species_name[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$canonicalName[1] # species name is sometimes missing (e.g. Anemone sylvestris); option only possible for exact matches
+      }
+      if (db$rank!="SPECIES"){ # if taxon name is below species level, try to get information on species level instead
+        db_all_2 <- name_backbone(dat$Species_name[ind_spec][1],verbose=T)
+        db_2 <- db_all_2[["data"]]
+        if (any(db_2$status=="ACCEPTED" & db_2$matchType=="EXACT") & (any(colnames(db_2)=="species"))){ # accept only exact matches
+          dat$Species_author[ind_spec] <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$scientificName[1]
+          dat$GBIFstatus[ind_spec]     <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$status[1]
+        } else {
+          # mismatches <- c(mismatches,speclist[j]) # if no exact match was found, jump to next species
+          mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+          try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+          try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
+          next
+        }
+      } else {
+        dat$Species_author[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$scientificName[1]
+        dat$GBIFstatus[ind_spec]     <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$status[1]
+      }
       try(dat$Family[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$family[1],silent=T)
       try(dat$Class[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$class[1],silent=T)
       try(dat$Order[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$order[1],silent=T)
       try(dat$Phylum[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$phylum[1],silent=T)
       try(dat$Kingdom[ind_spec] <- db[db$status=="ACCEPTED" & db$matchType=="EXACT",]$kingdom[1],silent=T)
-      next
+      
+      next # jump to next species
       
       # if name matches are not exact, select name with close match
     } else if (any(db$status=="SYNONYM" & db$matchType=="EXACT") & any(colnames(db)=="species")) { # select synonyms
@@ -73,11 +92,11 @@ CheckGBIFTax <- function(dat){
       } else if (dim(db_all_2$alternatives)[1]>0){
         alternatives_2 <- db_all_2$alternatives
         dat$Species_author[ind_spec] <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family==db$family[1],]$scientificName[1]
-        try(dat$Family[ind_spec]            <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT",]$family[1],silent=T)
-        try(dat$Class[ind_spec]             <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT",]$class[1],silent=T)
-        try(dat$Order[ind_spec]             <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT",]$order[1],silent=T)
-        try(dat$Phylum[ind_spec]            <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT",]$phylum[1],silent=T)
-        try(dat$Kingdom[ind_spec]           <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT",]$kingdom[1],silent=T)
+        try(dat$Family[ind_spec]            <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family==db$family[1],]$family[1],silent=T)
+        try(dat$Class[ind_spec]             <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family==db$family[1],]$class[1],silent=T)
+        try(dat$Order[ind_spec]             <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family==db$family[1],]$order[1],silent=T)
+        try(dat$Phylum[ind_spec]            <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family==db$family[1],]$phylum[1],silent=T)
+        try(dat$Kingdom[ind_spec]           <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family==db$family[1],]$kingdom[1],silent=T)
       }
       next
     }
@@ -86,11 +105,29 @@ CheckGBIFTax <- function(dat){
     if (any(alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT") & any(colnames(alternatives)=="species")){
       dat$Species_name[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT",]$species[1]
 
-      ## check information of kingdom and selected respective author
-      if (any(colnames(dat)=="Kingdom")) {
-        if (length(unique(alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$family))>1) print(paste(speclist[j],"name occurrs in more than one family"))
-        dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$scientificName[1]
-        dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$status[1]
+      ## check information of kingdom provided by user and selected respective author
+      if (any(colnames(dat)=="Kingdom_user")) {
+        if (length(unique(alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$family))>1) print(paste(speclist[j],"name occurrs in more than one family! To resolve this, you may provide information about author in original database, or kingdom or taxonomic group in DatabaseInfo.xlsx."))
+        
+        ## if taxon name is below species level, try to get information on species level instead
+        if (all(alternatives$rank!="SPECIES")){ 
+          db_all_2 <- name_backbone(dat$Species_name[ind_spec][1],verbose=T)
+          db_2 <- db_all_2[["data"]]
+          if (any(db_2$status=="ACCEPTED" & db_2$matchType=="EXACT") & (any(colnames(db_2)=="species"))){ # accept only exact matches
+            dat$Species_author[ind_spec] <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$scientificName[1]
+            dat$GBIFstatus[ind_spec]     <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$status[1]
+          } else {
+            # mismatches <- c(mismatches,speclist[j]) # if no exact match was found, jump to next species
+            mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+            try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+            try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
+            next
+          }
+        } else { # extract species information
+          dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$scientificName[1]
+          dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$status[1]
+        }
+
         try(dat$Family[ind_spec]            <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$family[1],silent=T)
         try(dat$Class[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$class[1],silent=T)
         try(dat$Order[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom==speclist_lifeform[j,2],]$order[1],silent=T)
@@ -100,19 +137,55 @@ CheckGBIFTax <- function(dat){
       }
         
       ## select entries from cross-taxonomic databases from certain taxa
-      if (unique(dat$Taxon_group)!="All"){
-        if (grepl("Vascular plants",unique(dat$Taxon_group))){
-          dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$scientificName[1]
-          dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$status[1]
-          try(dat$Family[ind_spec]            <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$family[1],silent=T)
-          try(dat$Class[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$class[1],silent=T)
-          try(dat$Order[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$order[1],silent=T)
-          try(dat$Phylum[ind_spec]            <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$phylum[1],silent=T)
-          try(dat$Kingdom[ind_spec]           <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$kingdom[1],silent=T)
+      if (unique(dat$Taxon_group)!="All"){ # check if 'Taxon_group' provides useful information
+        if (grepl("Vascular plants",unique(dat$Taxon_group))){ # case of vascular plants
+          
+          ## if taxon name is below species level, try to get information on species level instead
+          if (all(alternatives$rank!="SPECIES")){
+            db_all_2 <- name_backbone(dat$Species_name[ind_spec][1],verbose=T)
+            db_2 <- db_all_2[["data"]]
+            if (any(db_2$status=="ACCEPTED" & db_2$matchType=="EXACT") & (any(colnames(db_2)=="species"))){ # accept only exact matches
+              dat$Species_author[ind_spec] <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$scientificName[1]
+              dat$GBIFstatus[ind_spec]     <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$status[1]
+            } else {
+              # mismatches <- c(mismatches,speclist[j]) # if no exact match was found, jump to next species
+              mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+              try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+              try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
+              next
+            }
+          } else { # extract species information
+            dat$Species_author[ind_spec]  <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$scientificName[1]
+            dat$GBIFstatus[ind_spec]      <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$status[1]
+          }
+          
+          try(dat$Family[ind_spec]      <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$family[1],silent=T)
+          try(dat$Class[ind_spec]       <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$class[1],silent=T)
+          try(dat$Order[ind_spec]       <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$order[1],silent=T)
+          try(dat$Phylum[ind_spec]      <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$phylum[1],silent=T)
+          try(dat$Kingdom[ind_spec]     <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$kingdom=="Plantae",]$kingdom[1],silent=T)
         }
         if (grepl("Reptiles",unique(dat$Taxon_group))){
-          dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$scientificName[1]
-          dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$status[1]
+          
+          ## if taxon name is below species level, try to get information on species level instead
+          if (all(alternatives$rank!="SPECIES")){ 
+            db_all_2 <- name_backbone(dat$Species_name[ind_spec][1],verbose=T)
+            db_2 <- db_all_2[["data"]]
+            if (any(db_2$status=="ACCEPTED" & db_2$matchType=="EXACT") & (any(colnames(db_2)=="species"))){ # accept only exact matches
+              dat$Species_author[ind_spec] <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$scientificName[1]
+              dat$GBIFstatus[ind_spec]     <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$status[1]
+            } else {
+              # mismatches <- c(mismatches,speclist[j]) # if no exact match was found, jump to next species
+              mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+              try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+              try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
+              next
+            }
+          } else { # extract species information
+            dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$scientificName[1]
+            dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$status[1]
+          }
+          
           try(dat$Family[ind_spec]            <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$family[1],silent=T)
           try(dat$Class[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$class[1],silent=T)
           try(dat$Order[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$order[1],silent=T)
@@ -120,8 +193,26 @@ CheckGBIFTax <- function(dat){
           try(dat$Kingdom[ind_spec]           <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Reptilia",]$kingdom[1],silent=T)
         }
         if (grepl("Amphibians",unique(dat$Taxon_group))){
-          dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$scientificName[1]
-          dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$status[1]
+          
+          ## if taxon name is below species level, try to get information on species level instead
+          if (all(alternatives$rank!="SPECIES")){ 
+            db_all_2 <- name_backbone(dat$Species_name[ind_spec][1],verbose=T)
+            db_2 <- db_all_2[["data"]]
+            if (any(db_2$status=="ACCEPTED" & db_2$matchType=="EXACT") & (any(colnames(db_2)=="species"))){ # accept only exact matches
+              dat$Species_author[ind_spec] <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$scientificName[1]
+              dat$GBIFstatus[ind_spec]     <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$status[1]
+            } else {
+              # mismatches <- c(mismatches,speclist[j]) # if no exact match was found, jump to next species
+              mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+              try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+              try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
+              next
+            }
+          } else { # extract species information
+            dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$scientificName[1]
+            dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$status[1]
+          }
+          
           try(dat$Family[ind_spec]            <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$family[1],silent=T)
           try(dat$Class[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$class[1],silent=T)
           try(dat$Order[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$order[1],silent=T)
@@ -129,8 +220,26 @@ CheckGBIFTax <- function(dat){
           try(dat$Kingdom[ind_spec]           <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Amphibia",]$kingdom[1],silent=T)
         }
         if (grepl("Birds",unique(dat$Taxon_group))){
-          dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$scientificName[1]
-          dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$status[1]
+          
+          ## if taxon name is below species level, try to get information on species level instead
+          if (all(alternatives$rank!="SPECIES")){ 
+            db_all_2 <- name_backbone(dat$Species_name[ind_spec][1],verbose=T)
+            db_2 <- db_all_2[["data"]]
+            if (any(db_2$status=="ACCEPTED" & db_2$matchType=="EXACT") & (any(colnames(db_2)=="species"))){ # accept only exact matches
+              dat$Species_author[ind_spec] <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$scientificName[1]
+              dat$GBIFstatus[ind_spec]     <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$status[1]
+            } else {
+              # mismatches <- c(mismatches,speclist[j]) # if no exact match was found, jump to next species
+              mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+              try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+              try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
+              next
+            }
+          } else { # extract species information
+            dat$Species_author[ind_spec] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$scientificName[1]
+            dat$GBIFstatus[ind_spec]        <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$status[1]
+          }
+          
           try(dat$Family[ind_spec]            <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$family[1],silent=T)
           try(dat$Class[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$class[1],silent=T)
           try(dat$Order[ind_spec]             <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Aves",]$order[1],silent=T)
@@ -156,7 +265,7 @@ CheckGBIFTax <- function(dat){
         try(dat$Kingdom[ind_spec]           <- db_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$kingdom[1],silent=T)
       } else {
         alternatives_2 <- db_all_2$alternatives
-        if (length(unique(alternatives_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$family))>1) stop("Multiple entries of species names found!")
+        if (length(unique(alternatives_2[db_2$status=="ACCEPTED" & db_2$matchType=="EXACT",]$family))>1) print(paste(speclist[j],"name occurrs in more than one family! To resolve this, you may provide information about author in original database, or kingdom or taxonomic group in DatabaseInfo.xlsx.")) 
         dat$Species_author[ind_spec] <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family[1]==db$family[1],]$scientificName[1]
         try(dat$Family[ind_spec]            <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family[1]==db$family[1],]$family[1],silent=T)
         try(dat$Class[ind_spec]             <- alternatives_2[alternatives_2$status=="ACCEPTED" & alternatives_2$matchType=="EXACT" & alternatives_2$family[1]==db$family[1],]$class[1],silent=T)
@@ -167,7 +276,10 @@ CheckGBIFTax <- function(dat){
       next
       
     } else {
-      mismatches <- c(mismatches,speclist[j])
+      # mismatches <- c(mismatches,speclist[j])
+      mismatches <- rbind(mismatches,c(speclist[j],NA,NA))
+      try(mismatches$status[nrow(mismatches)] <- db$status,silent = T)
+      try(mismatches$matchType[nrow(mismatches)] <- db$matchType,silent = T)
     }
     
     #update progress bar

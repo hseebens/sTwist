@@ -58,8 +58,8 @@ PrepareDatasets <- function (FileInfo){
     ## check and rename optional column names
     if (!is.na(FileInfo[i,"Column_kingdom"]) & FileInfo[i,"Column_kingdom"]!=""){
       col_kingdom <- FileInfo[i,"Column_kingdom"]
-      colnames(dat)[col_names_import==col_kingdom] <- "Kingdom"
-      all_column_names <- c(all_column_names,"Kingdom")
+      colnames(dat)[col_names_import==col_kingdom] <- "Kingdom_user"
+      all_column_names <- c(all_column_names,"Kingdom_user")
     }
     if (!is.na(FileInfo[i,"Column_country_ISO"]) & FileInfo[i,"Column_country_ISO"]!=""){
       col_country_code <- FileInfo[i,"Column_country_ISO"]

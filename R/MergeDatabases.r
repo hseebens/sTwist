@@ -9,11 +9,11 @@
 #########################################################################################
 
 
-MergeDatabases <- function(FileInfo,version,output){
+MergeDatabases <- function(FileInfo,version,outputfilename,output){
   
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files("Output/")
-  inputfiles_all <- allfiles[grep("StandardFirstRecords_",allfiles)]
+  inputfiles_all <- allfiles[grep("StandardIntroYear_",allfiles)]
   inputfiles <- vector()
   for (i in 1:length(inputfiles_all)){
     inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
@@ -29,17 +29,14 @@ MergeDatabases <- function(FileInfo,version,output){
     dat <- dat[,colnames(dat)%in%cnames]
 
     eval(parse(text=paste0("dat$",substitute(a,list(a=FileInfo[i,1])),"<-\"x\""))) # add column with database information
-    
-    # ## make column of species names and author if available for merging databases
-    # dat$spec_merge <- dat$Species_author
-    # dat$spec_merge[is.na(dat$spec_merge)] <- dat$Species_name[is.na(dat$spec_merge)]
-    
+
     if (i==1){
       alldat <- dat
     } else {
       
       alldat <- merge(alldat,dat,by=c("Region_name","Species_name","Species_author","Family"),all=T) # merge databases
 
+      ## treat duplicated columns (named by R default ".x" and ".y")
       if (any(grepl("\\.y",colnames(alldat)))){
         if (any(colnames(alldat)=="First_record.x")){ # solve multiple first records
           ## select the minimum of multiple first records
@@ -61,6 +58,8 @@ MergeDatabases <- function(FileInfo,version,output){
     }
   }
   
+  ## check: Achyranthes aspera
+  
   ## remove duplicated entries
   ind_dupl <- duplicated(alldat) # remove identical lines
   alldat <- alldat[!ind_dupl,]
@@ -73,20 +72,26 @@ MergeDatabases <- function(FileInfo,version,output){
     for (k in 1:dim(alldat)[2]){ # loop over columns
       if (colnames(alldat)[k]%in%c("Region_name","Species_name")) next # ignore these columns
       if (all(is.na(alldat[ind_each,k]))) next # skip if all NA
-      if (all(grepl(alldat[ind_each,k][1],alldat[ind_each,k]))){ # skip if all equal (non-NA)
+      if (all(duplicated(alldat[ind_each,k])[-1])){ # skip if all equal (non-NA)
         next 
       } else {
-        if (!all(duplicated(alldat[ind_each,k])[-1])) { # check if entries deviate; if so, merge all into one string...
-          alldat[ind_each,k][1] <- paste(alldat[ind_each,k],collapse="; ") # concatenate unequal row entries
-          col_dupl <- c(col_dupl,colnames(alldat)[k]) # store column with deviating information for report
+        ind_NA <- is.na(alldat[ind_each,k]) # avoid NAs
+        if (length(unique(alldat[ind_each,k][!ind_NA]))==1){ # if only a single value is non-NA, add non-NA information to first row
+          alldat[ind_each,k][1] <- alldat[ind_each,k][!ind_NA][1]
+        } else { # if deviating entries exit, merge content into first row
+          if (colnames(alldat)[k]=="First_record"){ # treat first records differently
+            alldat[ind_each,k][1] <- min(alldat[ind_each,k],na.rm = T) # select earliest first record
+          } else {
+            alldat[ind_each,k][1] <- paste(alldat[ind_each,k][!ind_NA],collapse="; ") # concatenate unequal row entries
+            col_dupl <- c(col_dupl,colnames(alldat)[k]) # store column with deviating information for report
+          }
         }
         ind_rm <- c(ind_rm,ind_each[-1]) # collect rows to remove (all except the first one)
       }
     }
   }
-  alldat <- alldat[-ind_rm,] # remove all duplicates
+  alldat <- alldat[-unique(ind_rm),] # remove all duplicates
   if (length(col_dupl)>0) cat(paste0("\n Warning: Multiple entries for the same record. Check column '",unique(col_dupl),"' in final data set for entries separated by ';'. \n"))
-
 
   ## output #############################################
 
@@ -94,7 +99,7 @@ MergeDatabases <- function(FileInfo,version,output){
   all_addit_cols <- unlist(strsplit(all_addit_cols,"; "))
   all_addit_cols <- all_addit_cols[all_addit_cols!="NA"]
   if (any(colnames(alldat)=="First_record")){
-    columns_out <- c("Region_name","Species_name","Speciesx_author","First_record",FileInfo[,1],all_addit_cols)
+    columns_out <- c("Region_name","Species_name","Species_author","First_record",FileInfo[,1],all_addit_cols)
   } else {
     columns_out <- c("Region_name","Species_name","Species_author",FileInfo[,1],all_addit_cols)
   }
@@ -102,7 +107,12 @@ MergeDatabases <- function(FileInfo,version,output){
   alldat_out <- alldat[,columns_out]
   alldat_out[is.na(alldat_out)] <- ""
   
-  write.table(alldat_out,paste("Output/AlienSpecies_MultipleDBs_Masterfile_vs",version,".csv",sep=""),row.names=F)
+  write.table(alldat_out,paste("Output/",outputfilename,version,".csv",sep=""),row.names=F)
+  
+  # dat <- read.table(paste("Output/",outputfilename,version,".csv",sep=""),stringsAsFactors = F,header=T)
+  
+  ## ending line
+  cat(paste("\n Successfully established version",version,"of",outputfilename,"file. \n"))
   
   ## delete intermediate results if selected ########
   if (!output) {

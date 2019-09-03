@@ -40,7 +40,9 @@ library(openxlsx)
 ## set working directory; requires a sub-folder named "Data" including all relevant data files
 setwd("/home/hanno/Bioinvasion/IndicatorAliens/Workflow") # set working directory
 
-version <- "2.0" # which version of the database are you going to produce?
+outputfilename <- "AlienSpecies_MultipleDBs_Masterfile_vs" # name of final output file
+
+version <- "2.0" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
@@ -82,4 +84,5 @@ GetFirstRecord(FileInfo)
 
 ## merge databases...
 cat("\n5 Merging databases \n")
-MergeDatabases(FileInfo,version,output)
+MergeDatabases(FileInfo,version,outputfilename,output)
+

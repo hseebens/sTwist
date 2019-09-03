@@ -30,6 +30,8 @@ GetFirstRecord <- function(FileInfo){
     
     dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
     
+    dat$First_record_orig <- dat$First_record # keep original entry
+    
     ## treat first records #############
     nonnumeric <- vector()
     if (any(colnames(dat)=="First_record")){ 
@@ -84,7 +86,7 @@ GetFirstRecord <- function(FileInfo){
     
     if (length(nonnumeric)>0) write.table(nonnumeric,paste0("Output/NonNumericFirstRecords_",FileInfo[i,"Dataset_brief_name"],".csv"),row.names=F,col.names=F)
     
-    write.table(dat,paste0("Output/StandardFirstRecords_",FileInfo[i,"Dataset_brief_name"],".csv"))
+    write.table(dat,paste0("Output/StandardIntroYear_",FileInfo[i,"Dataset_brief_name"],".csv"))
     
   } 
 }
