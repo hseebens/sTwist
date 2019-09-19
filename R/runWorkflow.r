@@ -1,10 +1,12 @@
+#!/usr/bin/env Rscript
+
 #########################################################################################
 ## Merging databases of alien species distribution and first records
 ##
 ## 1. step: prepare column names of secies databases  
 ## 2. step: standardisation of species names using GBIF backbone taxonomy; user-defined
 ##          species names and taxonomic information can be added afterwards
-## 3. step: standardisation of country names
+## 3. step: standardisation of region names
 ## 4. step: standardisation of first records
 ## 5. step: merging all databases
 ##
@@ -42,7 +44,7 @@ setwd("/home/hanno/Bioinvasion/IndicatorAliens/Workflow") # set working director
 
 outputfilename <- "AlienSpecies_MultipleDBs_Masterfile_vs" # name of final output file
 
-version <- "2.0" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "2.1" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 

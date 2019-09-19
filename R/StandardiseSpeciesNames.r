@@ -37,7 +37,8 @@ StandardiseSpeciesNames <- function (FileInfo){
     # remove subspecies etc #######################################
     dat$Species_name <- gsub("  "," ",dat$Species_name)
     dat$Species_name <- gsub("^\\s+|\\s+$", "",dat$Species_name) # trim leading and trailing whitespace
-    dat$Species_name <- gsub("[$,\xc2\xa0]", " ",dat$Species_name) # replace weird white space with recognised white space
+    dat$Species_name <- gsub("[$\xc2\xa0]", " ",dat$Species_name) # replace weird white space with recognised white space
+    dat$Species_name <- gsub("  "," ",dat$Species_name)
     
     # loop over provided list of keywords to identify sub-species level information
     # subspIdent <- read.xlsx("Config/SubspecIdentifier.xlsx",colNames=F)[,1]

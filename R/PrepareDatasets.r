@@ -61,6 +61,11 @@ PrepareDatasets <- function (FileInfo){
       colnames(dat)[col_names_import==col_kingdom] <- "Kingdom_user"
       all_column_names <- c(all_column_names,"Kingdom_user")
     }
+    if (!is.na(FileInfo[i,"Column_island_name"]) & FileInfo[i,"Column_island_name"]!=""){
+      col_islandname <- FileInfo[i,"Column_island_name"]
+      ind_NA <- is.na(dat$island)
+      dat$Region_name_orig[!ind_NA] <- dat$island[!ind_NA] # replace country names by island names
+    }
     if (!is.na(FileInfo[i,"Column_country_ISO"]) & FileInfo[i,"Column_country_ISO"]!=""){
       col_country_code <- FileInfo[i,"Column_country_ISO"]
       colnames(dat)[col_names_import==col_country_code] <- "Country_ISO"

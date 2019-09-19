@@ -34,7 +34,7 @@ CheckGBIFTax <- function(dat){
   for (j in 1:n_species){# loop over all species names; takes some hours...
     
     # select species name and download taxonomy
-    ind_spec <- which(dat$Species_name_orig==speclist[j])
+    ind_spec <- which(dat$Species_name==speclist[j])
     db_all <- name_backbone(speclist[j],verbose=T) # check for names and synonyms
     db <- db_all[["data"]]
     alternatives <- db_all$alternatives

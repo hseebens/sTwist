@@ -24,6 +24,8 @@ StandardiseCountryNames <- function(FileInfo){
   
   ## load region table #################################################
   regions <- read.xlsx("Config/AllRegionsList.xlsx",sheet=1,na.strings ="")
+  regions$keywords <- gsub("\\(","\\\\(",regions$keywords)
+  regions$keywords <- gsub("\\)","\\\\)",regions$keywords)
   
   ## loop over all data set ############################################
   for (i in 1:length(inputfiles)){
@@ -62,21 +64,20 @@ StandardiseCountryNames <- function(FileInfo){
 
     ## step 1: match names of 'dat' with region names of 'regions'
     dat_match1 <- merge(dat_match1,regions,by.x="Region_name_orig",by.y="Region",all.x=T)
-    
-    ## step 2: match names by using keywords in 'regions
-    ind_match <- match(dat_match1$Region_name_orig,regions$keywords) # get matches of single keywords
-    all_match2 <- regions[ind_match,] # get long list of matches sorted as in 'dat_match1'
-    ind_match2 <- which(!is.na(all_match2$Region)) # indicate non NAs
-    dat_match1[ind_match2,]$Region_name_orig <- all_match2$Region[ind_match2] # replace region names with standardised region names
-    dat_match1[ind_match2,]$ISO2 <- all_match2$ISO2[ind_match2] # replace region names with standardised region names
 
-    ## step 3: loop over rows with multiple keywords
-    ind_keys <- which(unlist(lapply(strsplit(regions$keywords,"; "),length))>1)
-    for (j in 1:length(ind_keys)){
-      keywords <- unlist(strsplit(regions$keywords[ind_keys[j]],"; "))
-      ind_match <- match(dat_match1$Region_name_orig,keywords,nomatch=0) # get matches of single keywords
-      dat_match1$Region_name_orig[which(ind_match!=0)] <- regions$Region[ind_keys[j]]
-      dat_match1$ISO2[which(ind_match!=0)] <- regions$ISO2[ind_keys[j]]
+    ## step 3: match names by using keywords in 'regions
+    ind_keys <- which(!is.na(regions$keywords))
+    for (j in 1:length(ind_keys)){ # loop over rows with multiple keywords
+      if (any(grepl("; ",regions$keywords[ind_keys[j]]))){ # check if multiple keywords provided
+        keywords <- unlist(strsplit(regions$keywords[ind_keys[j]],"; "))
+      } else {
+        keywords <- regions$keywords[ind_keys[j]]
+      }
+      for (k in 1:length(keywords)){
+        ind_match <- grep(keywords[k],dat_match1$Region_name_orig) 
+        dat_match1$Region_name_orig[ind_match] <- regions$Region[ind_keys[j]]
+        dat_match1$ISO2[ind_match]             <- regions$ISO2[ind_keys[j]]
+      }
     }
 
     # sort(unique(dat_match1[is.na(dat_match1$ISO2),]$Region))
@@ -87,7 +88,7 @@ StandardiseCountryNames <- function(FileInfo){
     dat$Region_name <- dat_match1$Region_name_orig
     
     dat_regnames <- merge(dat,regions[,c("CountryID","ISO2","Region")],by.x="Region_name",by.y="Region",all.x=T)
-    
+
     ## remove duplicated entries ##############
     
     ind <- which(!duplicated(dat_regnames))
@@ -103,12 +104,13 @@ StandardiseCountryNames <- function(FileInfo){
 
     ## output ###############################################################################
     
-    missing <- dat_regnames$Region_name_orig[is.na(dat_regnames$ISO2)]
+    missing <- dat_regnames$Region_name_orig[is.na(dat_regnames$CountryID)]
     
     if (length(missing)>0){ # export missing country names
       write.table(sort(unique(missing)),paste0("Output/MissingRegions_",FileInfo[i,"Dataset_brief_name"],".csv"))
     }
     
+    dat_regnames <- dat_regnames[!is.na(dat_regnames$CountryID),]
     write.table(dat_regnames,paste0("Output/StandardRegionNames_",FileInfo[i,"Dataset_brief_name"],".csv"))
   }
   
