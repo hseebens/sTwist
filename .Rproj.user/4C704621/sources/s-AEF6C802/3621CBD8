@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572336144435.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1586747852",
+    "id" : "3621CBD8",
+    "lastKnownWriteTime" : 1569833219,
+    "last_content_update" : 1569833219,
+    "path" : "~/Bioinvasion/ContinentalTrends/Forecast_AlienNumbers_nonlinear_bash.r",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

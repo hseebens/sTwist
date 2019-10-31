@@ -8,12 +8,12 @@
 CheckGBIFTax <- function(dat){
   
   dat$Species_author <- NA
-  dat$GBIFstatus <- NA
+  dat$GBIFstatus <- "Missing"
   dat$Family <- NA
   dat$Class <- NA
   dat$Order <- NA
   dat$Phylum <- NA
-  dat$Kingdom <- NA # may match user-defined column!
+  dat$Kingdom <- NA 
   
   if (any(colnames(dat)=="Kingdom_user")){
     speclist_lifeform <- unique(dat[,c("Species_name","Kingdom_user")])
@@ -289,6 +289,8 @@ CheckGBIFTax <- function(dat){
   close(pb)
 
   options(warn=0) # the use of 'tibbles' data frame generates warnings as a bug; if solved this options() should be turned off
+  
+  # dat <- dat[!is.na(dat$GBIFstatus),] # remove species not resolved in GBIF
   
   out <- list()
   out[[1]] <- dat

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572336133976.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CAD4332A",
+    "lastKnownWriteTime" : 1572296037,
+    "last_content_update" : 1572363635394,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/UnifAlien/R/GetFirstRecord.r",
+    "project_path" : "R/GetFirstRecord.r",
+    "properties" : {
+        "cursorPosition" : "36,4",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

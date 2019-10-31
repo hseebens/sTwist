@@ -14,7 +14,7 @@
 GetFirstRecord <- function(FileInfo){
  
   ## identify input datasets based on file name "StandardSpec_....csv"
-  allfiles <- list.files("Output/")
+  allfiles <- list.files("Output")
   inputfiles_all <- allfiles[grep("StandardRegionNames_",allfiles)]
   inputfiles <- vector()
   for (i in 1:length(inputfiles_all)){
@@ -22,13 +22,13 @@ GetFirstRecord <- function(FileInfo){
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
   
-  replacements <- read.xlsx("Config/Guidelines_FirstRecords.xlsx")
+  replacements <- read.xlsx(file.path("Config","Guidelines_FirstRecords.xlsx"))
   replacements$Replacement[is.na(replacements$Replacement)] <- ""
   
   ## loop over databases ##########
   for (i in 1:length(inputfiles)){
     
-    dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
+    dat <- read.table(file.path("Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
     
     dat$First_record_orig <- dat$First_record # keep original entry
     
@@ -84,9 +84,9 @@ GetFirstRecord <- function(FileInfo){
     
     ## Output #######################################
     
-    if (length(nonnumeric)>0) write.table(nonnumeric,paste0("Output/NonNumericFirstRecords_",FileInfo[i,"Dataset_brief_name"],".csv"),row.names=F,col.names=F)
+    if (length(nonnumeric)>0) write.table(nonnumeric,file.path("Output",paste0("NonNumericFirstRecords_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
     
-    write.table(dat,paste0("Output/StandardIntroYear_",FileInfo[i,"Dataset_brief_name"],".csv"))
+    write.table(dat,file.path("Output",paste0("StandardIntroYear_",FileInfo[i,"Dataset_brief_name"],".csv")))
     
   } 
 }

@@ -15,7 +15,7 @@
 StandardiseSpeciesNames <- function (FileInfo){
 
   ## identify input datasets based on file name "StandardColumns_....csv"
-  allfiles <- list.files("Output/")
+  allfiles <- list.files("Output")
   inputfiles_all <- allfiles[grep("StandardColumns_",allfiles)]
   inputfiles <- vector()
   for (i in 1:length(inputfiles_all)){
@@ -28,7 +28,13 @@ StandardiseSpeciesNames <- function (FileInfo){
   fullspeclist <- vector()
   for (i in 1:length(inputfiles)){ # loop over inputfiles 
     
-    dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
+    dat <- read.table(file.path("Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
+    
+  #   print(inputfiles[i])
+  #   print(dim(dat))
+  #   print(length(unique(dat$Species_name_orig)))
+  #   print(length(unique(dat$Region_name_orig)))
+  # }
     
     dat <- dat[!is.na(dat$Species_name),]
     dat <- dat[dat$Species_name!="",]
@@ -64,19 +70,20 @@ StandardiseSpeciesNames <- function (FileInfo){
     ## export full species list with original species names and names assigned by GBIF for checking
     fullspeclist <- rbind(fullspeclist,unique(DB[,c("Species_name_orig","Species_name","Species_author","GBIFstatus","Family","Order","Class","Phylum","Kingdom")]))
     
+    DB <- unique(DB) # remove duplicates
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
-    DB <- DB[,!colnames(DB)%in%c("GBIFstatus","Order","Class","Phylum","Kingdom")]
+    DB <- DB[,!colnames(DB)%in%c("Order","Class","Phylum","Kingdom")]
     
-    write.table(DB,paste0("Output/StandardSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"))
+    write.table(DB,file.path("Output",paste0("StandardSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
     
     oo <- order(mismatches$Species_name)
     mismatches <- unique(mismatches[oo,])
     
-    write.table(mismatches,paste0("Output/MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv"),row.names=F,col.names=F)
+    write.table(mismatches,file.path("Output",paste0("MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
   }
   
   oo <- order(fullspeclist$Kingdom,fullspeclist$Phylum,fullspeclist$Class,fullspeclist$Species_name)
   fullspeclist <- fullspeclist[oo,]
   
-  write.table(unique(fullspeclist),"Output/SpeciesNamesFullList.csv",row.names=F)
+  write.table(unique(fullspeclist),file.path("Output","SpeciesNamesFullList.csv"),row.names=F)
 }

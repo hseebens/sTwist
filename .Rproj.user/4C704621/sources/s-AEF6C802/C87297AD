@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572342090304.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C87297AD",
+    "lastKnownWriteTime" : 1572509649,
+    "last_content_update" : 1572509649744,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/UnifAlien/R/runWorkflow.r",
+    "project_path" : "R/runWorkflow.r",
+    "properties" : {
+        "cursorPosition" : "62,0",
+        "scrollLine" : "41"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
