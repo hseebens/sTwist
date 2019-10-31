@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572344878321.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "45E97F8E",
+    "lastKnownWriteTime" : 1572528450,
+    "last_content_update" : 1572528450569,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/UnifAlien/R/StandardiseSpeciesNames.r",
+    "project_path" : "R/StandardiseSpeciesNames.r",
+    "properties" : {
+        "cursorPosition" : "74,33",
+        "scrollLine" : "54"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

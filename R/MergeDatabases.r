@@ -12,7 +12,7 @@
 MergeDatabases <- function(FileInfo,version,outputfilename,output){
   
   ## identify input datasets based on file name "StandardSpec_....csv"
-  allfiles <- list.files("Output/")
+  allfiles <- list.files("Output")
   inputfiles_all <- allfiles[grep("StandardIntroYear_",allfiles)]
   inputfiles <- vector()
   for (i in 1:length(inputfiles_all)){
@@ -22,10 +22,10 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   
   for (i in 1:length(inputfiles)){#
     
-    dat <- read.table(paste0("Output/",inputfiles[i]),header=T,stringsAsFactors = F)
+    dat <- read.table(file.path("Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
     
     cnames <- colnames(dat)
-    cnames <- cnames[!cnames%in%c("Species_name_orig","Region_name_orig","Kingdom","Country_ISO","GBIFstatus","ISO2","CountryID","Taxon_group")]
+    cnames <- cnames[!cnames%in%c("Species_name_orig","Region_name_orig","Kingdom","Country_ISO","GBIFstatus","ISO2","RegionID","Taxon_group")]
     dat <- dat[,colnames(dat)%in%cnames]
 
     eval(parse(text=paste0("dat$",substitute(a,list(a=FileInfo[i,1])),"<-\"x\""))) # add column with database information
@@ -107,7 +107,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   alldat_out <- alldat[,columns_out]
   alldat_out[is.na(alldat_out)] <- ""
   
-  write.table(alldat_out,paste("Output/",outputfilename,version,".csv",sep=""),row.names=F)
+  write.table(alldat_out,file.path("Output",paste(outputfilename,version,".csv",sep="")),row.names=F)
   
   # dat <- read.table(paste("Output/",outputfilename,version,".csv",sep=""),stringsAsFactors = F,header=T)
   
@@ -116,8 +116,8 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   
   ## delete intermediate results if selected ########
   if (!output) {
-    interm_res <- list.files("Output/")
+    interm_res <- list.files("Output")
     interm_res <- interm_res[grep("Standard",interm_res)]
-    file.remove(paste0("Output/",interm_res))
+    file.remove(paste0("Output",interm_res))
   }
 }

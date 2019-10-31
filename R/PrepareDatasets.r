@@ -22,8 +22,18 @@ PrepareDatasets <- function (FileInfo){
     
     ## load data set
     data_name <- FileInfo[i,"File_name_to_load"]
-    dat <- read.xlsx(paste("Inputfiles/",data_name,sep=""),sheet=1)
-
+    dat <- read.xlsx(file.path("Inputfiles",data_name),sheet=1)
+    
+  #   print(inputfiles[i])
+  #   print(dim(dat))
+  #   print(length(unique(dat$scientificName)))
+  #   print(length(unique(dat$Species)))
+  #   print(length(unique(paste(dat$standardized_name,dat$author))))
+  #   print(length(unique(dat$CountryName)))
+  #   print(length(unique(dat$country)))
+  #   print(length(unique(dat$tdwg4_name)))
+  # }
+  
     ## correct modification of import of column names through R
     col_names_import <- colnames(dat)
     col_names_import <- gsub("\\.+"," ",col_names_import)
@@ -97,12 +107,18 @@ PrepareDatasets <- function (FileInfo){
     dat_out[dat_out=="Null"] <- ""
     dat_out[is.na(dat_out)] <- ""
     
+    ## remove rows with missing species and region names
+    dat_out <- dat_out[!dat_out$Region_name_orig=="",]
+    dat_out <- dat_out[!dat_out$Species_name_orig=="",]
+    
     dat_out$Taxon_group <- FileInfo[i,"Taxon_group"]
     
     colnames(dat_out) <- gsub("\\.+","_",colnames(dat_out))
     dat_out$Species_name_orig <- gsub("\"","",dat_out$Species_name_orig) # remove additional quotes to avoid difficulties with export
     dat_out$Species_name_orig <- gsub("\\\\","",dat_out$Species_name_orig) # remove backshlashes
 
-    write.table(dat_out,paste("Output/StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
+    dat_out <- unique(dat_out) # remove duplicates
+    
+    write.table(dat_out,file.path("Output",paste("StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep="")))
   }
 }

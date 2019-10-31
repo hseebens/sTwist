@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572343184464.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F272B46E",
+    "lastKnownWriteTime" : 1572527396,
+    "last_content_update" : 1572527396113,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/UnifAlien/R/PrepareDatasets.r",
+    "project_path" : "R/PrepareDatasets.r",
+    "properties" : {
+        "cursorPosition" : "35,0",
+        "scrollLine" : "15"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

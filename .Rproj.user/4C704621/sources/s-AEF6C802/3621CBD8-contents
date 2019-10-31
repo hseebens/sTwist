@@ -1,0 +1,271 @@
+##################################################################################
+## Implemented model to project alien species numbers 
+## 
+## Details are described in Seebens et al. "Projecting the continental 
+## accumulation of alien species until 2050".
+##
+## written by Hanno Seebens, 30.09.2019
+##################################################################################
+
+## run with RunModel_BackForecast_AlienSpeciesNumbers.sh
+
+options(warn=-1)
+
+suppressMessages(library(data.table))
+
+ntimes <- 100 # number of repititions, 20
+interv <- 5 # time interval of aggregation
+
+makeplot <- F
+
+# ## read from bash script #####################
+run <- args[6]
+suffix <- args[7]
+fr_vers <- args[8]
+future <- as.integer(args[9])
+usedtimes <- as.integer(args[10])
+# ###############################################
+
+## functional forms of fits of first record rates ###############################################
+
+linear <- function(parms){
+  y <- parms[1] + parms[2] * (nfr_years-1800)
+  f <- sqrt(mean((nfr_obs-y)^2,na.rm=T))/mean(nfr_obs,na.rm=T)
+  aic <- dim(dat)[1]*(log(2*pi)+1+log((sum((nfr_obs-y)^2)/dim(dat)[1])))+((length(parms)+1)*2)
+  return(aic)
+}
+
+exponential <- function(parms){
+  y <- parms[1] * exp(parms[2]*(nfr_years-1800))
+  # y <- parms[1] * 10^(parms[2]*(nfr_years-1800))
+  f <- sqrt(mean((nfr_obs-y)^2,na.rm=T))/mean(nfr_obs,na.rm=T)
+  aic <- dim(dat)[1]*(log(2*pi)+1+log((sum((nfr_obs-y)^2)/dim(dat)[1])))+((length(parms)+1)*2)
+  return(aic)
+}
+
+powerlaw <- function(parms){
+  y <- parms[1] * (nfr_years-1795)^parms[2]
+  f <- sqrt(mean((nfr_obs-y)^2,na.rm=T))/mean(nfr_obs,na.rm=T)
+  aic <- dim(dat)[1]*(log(2*pi)+1+log((sum((nfr_obs-y)^2)/dim(dat)[1])))+((length(parms)+1)*2)
+  return(aic)
+}
+
+expinverse <- function(parms){
+  y <- parms[1] * (1-exp(-parms[2]*(nfr_years-1800)))
+  f <- sqrt(mean((nfr_obs-y)^2,na.rm=T))/mean(nfr_obs,na.rm=T)
+  aic <- dim(dat)[1]*(log(2*pi)+1+log((sum((nfr_obs-y)^2)/dim(dat)[1])))+((length(parms)+1)*2)
+  return(aic)
+}
+
+sigmoidal <- function(parms){
+  # y <- parms[3]*(1 + (parms[1]/nfr_years))^-parms[2]
+  y <- parms[1]*(((nfr_years-1800)^parms[2])/((nfr_years-1800)^parms[2] + parms[3]^parms[2]))  
+  f <- sqrt(mean((nfr_obs-y)^2,na.rm=T))/mean(nfr_obs,na.rm=T)
+  aic <- dim(dat)[1]*(log(2*pi)+1+log((sum((nfr_obs-y)^2)/dim(dat)[1])))+((length(parms)+1)*2)
+  return(aic)
+}
+
+
+weibull <- function(parms){
+  # y <- parms[3]*(1 + (parms[1]/nfr_years))^-parms[2]
+  y <- parms[1]*((parms[3]/parms[2]) * ((nfr_years-1800)/parms[2])^(parms[3]-1) * exp(-((nfr_years-1800)/parms[2])^parms[3]))
+  f <- sqrt(mean(((nfr_obs)-(y*max_nspec))^2,na.rm=T))/mean(nfr_obs,na.rm=T)
+  aic <- dim(dat)[1]*(log(2*pi)+1+log((sum((nfr_obs-(y*max_nspec))^2)/dim(dat)[1])))+((length(parms)+1)*2)
+  return(aic)
+}
+
+###########################################################################################
+
+
+modelresults_all <- try(read.table(paste("Data/Simulations",suffix,fr_vers,"/ModelResults_ratioFR_conts_4varknots",suffix,fr_vers,"_run",run,".csv",sep=""),stringsAsFactors = F),silent=T)
+
+if (class(modelresults_all)=="try-error"){
+  print(paste("Forecast_invrates: Run",run,"not available!"))
+} else {
+
+  print(paste("Forecast_invrates non-linear: processing run:",run))
+
+  end_obs <- max(modelresults_all$year)
+  predtimes <- seq(end_obs+interv,future,interv)
+
+  all_combn <- unique(modelresults_all[,c("LifeForm","Continent")])
+  
+  empty_obf <- matrix(NA,nr=length(predtimes),nc=9)
+
+  ## open plot
+  if (makeplot){
+    x11(width=12,height=10)
+    # png(paste("Figures/NonLinearFits_FRSpecNonLinChange",suffix,fr_vers,"_run",run,".png",sep=""),unit="in",width=17,height=10,res=300)
+    layout(matrix(c(1:57,58,58,58),ncol=10,byrow=T))
+    op <- par(oma=c(0,2.5,0,0),mar=c(2,2,1.5,1),mgp=c(2,0.6,0),tck=-0.02,cex.axis=1.2,xaxs="i",yaxs="i",las=1,pch=16)
+  }
+  
+  all_out <- all_out_cs <- list()
+  for (j in 1:dim(all_combn)[1]){
+    
+    dat <- subset(modelresults_all,LifeForm==all_combn[j,1] & Continent==all_combn[j,2])
+    dat <- subset(dat,!is.na(dat$nfr_obs))
+    dat$lwr <- dat$upr <- dat$nfr_obs
+    
+    preddat <- data.frame(empty_obf)
+    preddat[,1] <- rep(dat[1,1],length(predtimes))
+    preddat[,2] <- rep(dat[1,2],length(predtimes))
+    preddat[,3] <- predtimes
+    colnames(preddat) <- colnames(dat)
+    
+    ## linear extrapolation of species pools 
+    ind_years <- dat$year>=(end_obs-usedtimes)
+    ind_years[length(ind_years)] <- FALSE # avoid last entry as it is prone to misspecification
+    if (sum(ind_years)<5) next # too few observations
+    regs_specpool <- lm(dat$specpool[ind_years]~dat$year[ind_years])
+    preddat$specpool <- round(coef(regs_specpool)[1] + coef(regs_specpool)[2]*predtimes)
+    if (all(is.na(preddat$specpool))) next
+    if (any(preddat$specpool<0)) preddat$specpool[preddat$specpool<0] <- 1
+    
+    ## non-linear extrapolation of first record rate ####################################
+    nfr_obs <- dat$nfr_obs[dat$year>=1800 & dat$year<=2000]
+    nfr_years <- dat$year[dat$year>=1800 & dat$year<=2000]
+    
+    ## fit models 
+    parms <- c(a=1,b=max(nfr_obs))
+    fit0 <- optim(par=parms,fn=linear)
+    fit_linear <- fit0$value
+    
+    parms <- c(a=1,b=0.01)
+    fit1 <- optim(par=parms,fn=exponential)
+    fit_exp <- fit1$value
+        
+    parms <- c(a=max(nfr_obs),b=0.006)
+    fit2 <- optim(par=parms,fn=expinverse)
+    fit_expinv <- fit2$value
+    
+    parms <- c(a=max(nfr_obs),b=18,c=100)
+    fit3 <- optim(par=parms,fn=sigmoidal)
+    fit_sig <- fit3$value
+    
+    parms <- c(a=1,b=1)
+    fit5 <- optim(par=parms,fn=powerlaw)
+    fit_power <- fit5$value
+    
+    max_nspec <- max(nfr_obs)
+    # tab[,2] <- tab[,2]/max_nspec
+    parms <- c(a=10,b=100,c=5)
+    fit4 <- optim(par=parms,fn=weibull,control=list(maxit=1000,reltol=1e-15))
+    fit_weib <- fit4$value
+    
+    all_fits <- c(fit_linear,fit_exp,fit_expinv,fit_sig,fit_weib,fit_power)
+    names(all_fits) <- c("linear","exp","expinv","sig","weib","power")
+    all_fits <- sort(all_fits)
+    best <- names(all_fits)[1]
+    
+    if (diff(all_fits[1:2])<5){ # check if >1 best fit exists
+      if (names(all_fits)[2]=="linear") best <- "linear" # select linear if differences are small
+      if (best=="weib") best <- names(all_fits)[2] # select simpler if differences are small
+    }
+
+    ## only consider weibull if last values of time series indicate a decline to avoid false declines
+    testslope <- lm(dat$nfr_obs[(length(dat$nfr_obs)-4):length(dat$nfr_obs)]~dat$year[(length(dat$nfr_obs)-4):length(dat$nfr_obs)])
+    if (testslope$coefficients[2]>0 & best=="weib") best <- names(all_fits)[2] # select second best if time series tend to not decline
+    
+    if (makeplot){
+      # x11()
+      plot(dat$year,dat$nfr_obs,xlim=c(1500,2050),ylim=c(0,max(dat$nfr_obs)*1.2))
+      lines(nfr_years,(fit0$par[1]+fit0$par[2]*(nfr_years-1800)),col="gray")
+      lines(nfr_years,fit1$par[1]*exp(fit1$par[2]*(nfr_years-1800)),col="blue")
+      lines(nfr_years,fit2$par[1]*(1-exp(-fit2$par[2]*(nfr_years-1800))),col="green")
+      lines(nfr_years,fit3$par[1]*(((nfr_years-1800)^fit3$par[2])/((nfr_years-1800)^fit3$par[2] + fit3$par[3]^fit3$par[2])),col="red")
+      lines(nfr_years,fit4$par[1]*((fit4$par[3]/fit4$par[2]) * ((nfr_years-1800)/fit4$par[2])^(fit4$par[3]-1) * exp(-((nfr_years-1800)/fit4$par[2])^fit4$par[3]))*max_nspec,col="orange")
+      lines(nfr_years,fit5$par[1]*((nfr_years-1795)^fit5$par[2]),col="black")
+      nfr_years <- c(nfr_years,seq(2005,2050,5))
+      if (best=="linear") lines(nfr_years,(fit0$par[1]+fit0$par[2]*(nfr_years-1800)),col="gray",lwd=3)
+      if (best=="exp") lines(nfr_years,fit1$par[1]*exp(fit1$par[2]*(nfr_years-1800)),col="blue",lwd=3)
+      if (best=="expinv") lines(nfr_years,fit2$par[1]*(1-exp(-fit2$par[2]*(nfr_years-1800))),col="green",lwd=3)
+      if (best=="sig") lines(nfr_years,fit3$par[1]*(((nfr_years-1800)^fit3$par[2])/((nfr_years-1800)^fit3$par[2] + fit3$par[3]^fit3$par[2])),col="red",lwd=3)
+      if (best=="weib") lines(nfr_years,fit4$par[1]*((fit4$par[3]/fit4$par[2]) * ((nfr_years-1800)/fit4$par[2])^(fit4$par[3]-1) * exp(-((nfr_years-1800)/fit4$par[2])^fit4$par[3]))*max_nspec,col="orange",lwd=3)
+      if (best=="power") lines(nfr_years,fit5$par[1]*((nfr_years-1795)^fit5$par[2]),col="black",lwd=3)
+    }
+    if (best=="linear") predictions <- fit0$par[1]+fit0$par[2]*(predtimes-1800)
+    if (best=="exp") predictions <- fit1$par[1]*exp(fit1$par[2]*(predtimes-1800))
+    if (best=="expinv") predictions <- fit2$par[1]*(1-exp(-fit2$par[2]*(predtimes-1800)))
+    if (best=="sig") predictions <- fit3$par[1]*(((predtimes-1800)^fit3$par[2])/((predtimes-1800)^fit3$par[2] + fit3$par[3]^fit3$par[2]))
+    if (best=="weib") predictions <- fit4$par[1]*((fit4$par[3]/fit4$par[2]) * ((predtimes-1800)/fit4$par[2])^(fit4$par[3]-1) * exp(-((predtimes-1800)/fit4$par[2])^fit4$par[3]))*max_nspec
+    if (best=="power") predictions <- fit5$par[1]*((predtimes-1795)^fit5$par[2])
+    
+    if (best=="sig" & any(predictions=="NaN")) predictions[predictions=="NaN"] <-  mean(predictions[predictions!="NaN"]) # extremely high parameters cause Inf
+    
+    preddat$nfr_obs <- round(predictions)
+    preddat[preddat<0] <- 0
+    
+    all_dat <- rbind(dat,preddat)
+    
+    # if (all(is.na(subset(all_dat,year>2005)$nfr_obs))) next # no prdictions available, 5 year intervals
+    # if (all(is.na(subset(all_dat,year>2000)$nfr_obs))) next # no prdictions available, 10 year intervals
+    if (all(is.na(subset(all_dat,year>1950)$nfr_obs))) next # no predictions available, backcasting
+    
+    ## model #########################################
+    
+    invaders <- list()
+    for (l in 1:dim(all_dat)[1]){
+      invaders[[l]] <- plnorm(seq(0,1,length.out=all_dat$specpool[l]),meanlog=-2,sdlog=1) # determine distribution of source pool
+    }
+    timeaxis <- all_dat$year
+    
+    nfr_year_avg <- rep(timeaxis,times=all_dat$nfr_obs)
+
+    out_tab_min_avg <- out_tab_min_lwr <- out_tab_min_upr <- matrix(NA,nr=length(timeaxis),nc=ntimes)
+    x <- 0
+    for (r in 1:ntimes){
+      x <- x + 1
+      
+      ## average prediction
+      rnd_fr <- list() # data.frame(year=NA,country=NA,freq=NA)
+      for (i in 1:dim(all_dat)[1]){
+        rands <- runif(all_dat$nfr_obs[i])
+        natpool <- invaders[[which(timeaxis==all_dat$year[i])]]
+        rnd_fr[[i]] <- findInterval(rands,natpool,all.inside = T)
+      }
+      dt <- data.table(x=nfr_year_avg, id=unlist(rnd_fr))[,min(x),by=id]
+      tab_min <- dt[,.N,by=V1] # count number of years
+      out_tab_min_avg[timeaxis%in%tab_min$V1,x] <- tab_min[tab_min$V1%in%timeaxis]$N
+      
+
+    }
+    mean_tab_min_avg <- as.data.frame(cbind(timeaxis,rowMeans(out_tab_min_avg,na.rm=T)),stringsAsFactors = F)
+    colnames(mean_tab_min_avg) <- c("year","nfrmin_future_avg")
+    mean_tab_min_cv <- as.data.frame(cbind(timeaxis,apply(out_tab_min_avg,1,function(s) sd(s,na.rm=T)/mean(s,na.rm=T)*100)),stringsAsFactors = F) # confidence intervals
+    colnames(mean_tab_min_cv) <- c("year","nfrmin_future_cv")
+
+    out <- merge(all_dat,mean_tab_min_avg,by="year",all=T)
+    out <- merge(out,mean_tab_min_cv,by="year",all=T)
+    all_out[[j]] <- out
+    
+    ## cumulative sum
+    out_tab_min_avg[is.na(out_tab_min_avg)] <- 0
+    cumsum_tab_min <- apply(out_tab_min_avg,2,cumsum)
+    cs_tab_min_avg <- as.data.frame(cbind(timeaxis,rowMeans(cumsum_tab_min,na.rm=T)),stringsAsFactors = F)
+    colnames(cs_tab_min_avg) <- c("year","nfrmin_future_avg")
+    cs_tab_min_sd <- as.data.frame(cbind(timeaxis,run,apply(cumsum_tab_min,1,function(s) sd(s,na.rm=T))),stringsAsFactors = F) # confidence intervals
+    colnames(cs_tab_min_sd) <- c("year","run","nfrmin_future_sd")
+    
+    out_cs <- merge(all_dat,cs_tab_min_avg,by="year",all=T)
+    out_cs <- merge(out_cs,cs_tab_min_sd,by="year",all=T)
+    out_cs$bestFit <- best
+    all_out_cs[[j]] <- out_cs
+    
+  }
+  if (makeplot){
+    oop <- par(mar=c(0,0,0,0))
+    plot(1:10,type="n",axes=F)
+    legend("center",legend=c("linear","exponential","powerlaw","invexp","sigmoidal","weibull"),lty=1,col=c("gray","blue","black","green","red","orange"),ncol=2,cex=1.2,xpd=t)
+    par(oop)
+    
+    par(op)
+    # dev.off()
+  }
+  all_df <- do.call(rbind,all_out)
+  all_df_cs <- do.call(rbind,all_out_cs)
+  
+  # output
+  write.table(all_df_cs,paste("Data/Simulations",suffix,fr_vers,"/FutureModRes_ratioFR_conts_4varknots_",usedtimes,"yback_FRSpecNonLinChange",suffix,fr_vers,"_run",run,".csv",sep=""))
+  # write.table(all_df_cs,paste("Data/Simulations",suffix,fr_vers,"/FutureModRes_ratioFR_conts_0knots_",usedtimes,"yback_FRSpecNonLinChange",suffix,fr_vers,"_run",run,".csv",sep=""))
+}
