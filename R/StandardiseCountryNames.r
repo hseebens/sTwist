@@ -7,7 +7,7 @@
 ## AllRegionsList.xlsx.
 ##
 ## sTwist workshop
-## Hanno Seebens, 30.08.2019
+## Hanno Seebens, 11.12.2019
 #########################################################################################
 
 
@@ -15,7 +15,7 @@ StandardiseCountryNames <- function(FileInfo){
 
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files("Output")
-  inputfiles_all <- allfiles[grep("StandardSpecNames_",allfiles)]
+  inputfiles_all <- allfiles[grep("StandardTaxonNames_",allfiles)]
   inputfiles <- vector()
   for (i in 1:length(inputfiles_all)){
     inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
@@ -33,6 +33,8 @@ StandardiseCountryNames <- function(FileInfo){
   for (i in 1:length(inputfiles)){
     
     dat <- read.table(file.path("Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
+    
+    # dat <- dat[dat$GBIFstatus!="Missing",]
     #   print(inputfiles[i])
     #   print(dim(dat))
     #   print(length(unique(dat$Species_name_orig)))
@@ -89,15 +91,9 @@ StandardiseCountryNames <- function(FileInfo){
       }
     }
 
-    # d <- (unique(dat_match1[is.na(dat_match1$ISO2),c("Region_name_orig","Code")]))
-    # d[order(d$Code),]
-    
-    
-    # sort(unique(dat_match1[is.na(dat_match1$ISO2),]$Region))
-    
     ## final merging of both data sets with standardised region names
     dat_match1 <- dat_match1[order(dat_match1$order),]
-    if (!identical(dat_match1$Species_name_orig,dat$Species_name_orig)) stop("Data sets not sorted equally!")
+    if (!identical(dat_match1$Taxon_name_orig,dat$Taxon_name_orig)) stop("Data sets not sorted equally!")
     dat$Region_name <- dat_match1$Region
     
     dat_regnames <- merge(dat,regions[,c("RegionID","ISO2","Region")],by.x="Region_name",by.y="Region",all.x=T)
@@ -108,9 +104,9 @@ StandardiseCountryNames <- function(FileInfo){
 
     ## keep only earliest first record
     if (any(colnames(dat_regnames)=="First_record")){
-      oo <- order(dat_regnames$Region_name,dat_regnames$Species_name,dat_regnames$First_record) # sort ascending order
+      oo <- order(dat_regnames$Region_name,dat_regnames$Taxon_name,dat_regnames$First_record) # sort ascending order
       dat_regnames <- dat_regnames[oo,]
-      ind <- which(!duplicated(dat_regnames[,c("Region_name","Species_name")])) # identify duplicates (the first match is not counted, only the subsequent duplicates)
+      ind <- which(!duplicated(dat_regnames[,c("Region_name","Taxon_name")])) # identify duplicates (the first match is not counted, only the subsequent duplicates)
       dat_regnames <- dat_regnames[ind,] # delete duplicates
     }
 

@@ -8,7 +8,7 @@
 ## Script requires internet connection.
 ##
 ## sTwist workshop
-## Hanno Seebens et al., 30.08.2019
+## Hanno Seebens et al., 10.12.2019
 #########################################################################################
 
 
@@ -36,15 +36,15 @@ StandardiseSpeciesNames <- function (FileInfo){
   #   print(length(unique(dat$Region_name_orig)))
   # }
     
-    dat <- dat[!is.na(dat$Species_name),]
-    dat <- dat[dat$Species_name!="",]
-    dat$Species_name <- dat$Species_name_orig
+    dat <- dat[!is.na(dat$Taxon_name),]
+    dat <- dat[dat$Taxon_name!="",]
+    dat$Taxon_name <- dat$Taxon_name_orig
     
     # remove subspecies etc #######################################
-    dat$Species_name <- gsub("  "," ",dat$Species_name)
-    dat$Species_name <- gsub("^\\s+|\\s+$", "",dat$Species_name) # trim leading and trailing whitespace
-    dat$Species_name <- gsub("[$\xc2\xa0]", " ",dat$Species_name) # replace weird white space with recognised white space
-    dat$Species_name <- gsub("  "," ",dat$Species_name)
+    dat$Taxon_name <- gsub("  "," ",dat$Taxon_name)
+    dat$Taxon_name <- gsub("^\\s+|\\s+$", "",dat$Taxon_name) # trim leading and trailing whitespace
+    dat$Taxon_name <- gsub("[$\xc2\xa0]", " ",dat$Taxon_name) # replace weird white space with recognised white space
+    dat$Taxon_name <- gsub("  "," ",dat$Taxon_name)
     
     # loop over provided list of keywords to identify sub-species level information
     # subspIdent <- read.xlsx("Config/SubspecIdentifier.xlsx",colNames=F)[,1]
@@ -68,22 +68,22 @@ StandardiseSpeciesNames <- function (FileInfo){
     mismatches <- dat[[2]]
     
     ## export full species list with original species names and names assigned by GBIF for checking
-    fullspeclist <- rbind(fullspeclist,unique(DB[,c("Species_name_orig","Species_name","Species_author","GBIFstatus","Family","Order","Class","Phylum","Kingdom")]))
+    fullspeclist <- rbind(fullspeclist,unique(DB[,c("Taxon_name_orig","Taxon_name","Scientific_name","GBIFstatus","GBIFmatchtype","GBIFrank","GBIFnote","Species","Genus","Family","Order","Class","Phylum","Kingdom")]))
     
     DB <- unique(DB) # remove duplicates
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
-    DB <- DB[,!colnames(DB)%in%c("Order","Class","Phylum","Kingdom")]
+    DB <- DB[,!colnames(DB)%in%c("GBIFstatus","GBIFmatchtype","GBIFrank","GBIFnote","Species","Genus","Family","Order","Class","Phylum","Kingdom")]
     
-    write.table(DB,file.path("Output",paste0("StandardSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(DB,file.path("Output",paste0("StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
     
-    oo <- order(mismatches$Species_name)
+    oo <- order(mismatches$Taxon_name)
     mismatches <- unique(mismatches[oo,])
     
-    write.table(mismatches,file.path("Output",paste0("MissingSpecNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
+    write.table(mismatches,file.path("Output",paste0("MissingTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
   }
   
-  oo <- order(fullspeclist$Kingdom,fullspeclist$Phylum,fullspeclist$Class,fullspeclist$Species_name)
+  oo <- order(fullspeclist$Kingdom,fullspeclist$Phylum,fullspeclist$Class,fullspeclist$Taxon_name)
   fullspeclist <- fullspeclist[oo,]
   
-  write.table(unique(fullspeclist),file.path("Output","SpeciesNamesFullList.csv"),row.names=F)
+  write.table(unique(fullspeclist),file.path("Output","TaxonNamesFullList.csv"),row.names=F)
 }

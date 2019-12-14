@@ -2,7 +2,7 @@
 
 #########################################################################################
 ## Merging databases of alien species distribution and first records
-## Hanno Seebens, 31.10.2019
+## Hanno Seebens, 11.12.2019
 #########################################################################################
 
 graphics.off()
@@ -16,7 +16,7 @@ library(openxlsx)
 ## option for storing the intermediate and final output
 outputfilename <- "AlienSpecies_MultipleDBs_Masterfile_vs" # name of final output file
 
-version <- "2.2" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "2.3" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
@@ -24,8 +24,8 @@ output <- T # shall intermediate results be stored to disk? (may overwrite exist
 ################################################################################
 ### load other functions #######################################################
 source(file.path("R","PrepareDatasets.r")) # preparing example data sets as input files
-source(file.path("R","StandardiseSpeciesNames.r")) # standardising species names, requires GBIF connection, takes some time...
-source(file.path("R","OverwriteSpeciesNames.r")) # replace species names with user-defined ones
+source(file.path("R","StandardiseTaxonNames.r")) # standardising species names, requires GBIF connection, takes some time...
+source(file.path("R","OverwriteTaxonNames.r")) # replace species names with user-defined ones
 source(file.path("R","StandardiseCountryNames.r")) # standardising country names
 source(file.path("R","GetFirstRecord.r")) # standardising country names
 source(file.path("R","MergeDatabases.r")) # combine data sets
@@ -45,8 +45,8 @@ PrepareDatasets(FileInfo)
 
 ## load databases, extract required information and harmonise species names...
 cat("\n2 Standardisation of species names \n")
-StandardiseSpeciesNames(FileInfo)
-OverwriteSpeciesNames(FileInfo) # user-defined species names
+StandardiseTaxonNames(FileInfo)
+OverwriteTaxonNames(FileInfo) # user-defined species names
 
 ## harmonise species names...
 cat("\n3 Standardisation of country names \n")

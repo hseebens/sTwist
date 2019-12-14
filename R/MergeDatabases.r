@@ -5,7 +5,7 @@
 ## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, amphibians + reptiles
 ##
 ## sTwist workshop
-## Hanno Seebens, 08.08.2019
+## Hanno Seebens, 11.12.2019
 #########################################################################################
 
 
@@ -23,9 +23,15 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   for (i in 1:length(inputfiles)){#
     
     dat <- read.table(file.path("Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
-    
+  #   dat <- dat[dat$GBIFstatus!="Missing",]
+  #   print(inputfiles[i])
+  #   print(dim(dat))
+  #   print(length(unique(dat$Taxon_name_orig)))
+  #   print(length(unique(dat$Region_name_orig)))
+  # }
+  
     cnames <- colnames(dat)
-    cnames <- cnames[!cnames%in%c("Species_name_orig","Region_name_orig","Kingdom","Country_ISO","GBIFstatus","ISO2","RegionID","Taxon_group")]
+    cnames <- cnames[!cnames%in%c("Taxon_name_orig","Region_name_orig","Kingdom","Country_ISO","ISO2","RegionID","Taxon_group")]
     dat <- dat[,colnames(dat)%in%cnames]
 
     eval(parse(text=paste0("dat$",substitute(a,list(a=FileInfo[i,1])),"<-\"x\""))) # add column with database information
@@ -34,7 +40,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
       alldat <- dat
     } else {
       
-      alldat <- merge(alldat,dat,by=c("Region_name","Species_name","Species_author","Family"),all=T) # merge databases
+      alldat <- merge(alldat,dat,by=c("Region_name","Taxon_name","Scientific_name"),all=T) # merge databases
 
       ## treat duplicated columns (named by R default ".x" and ".y")
       if (any(grepl("\\.y",colnames(alldat)))){
@@ -64,13 +70,13 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   ind_dupl <- duplicated(alldat) # remove identical lines
   alldat <- alldat[!ind_dupl,]
   
-  ind_dupl <- duplicated(alldat[,c("Species_name","Region_name")]) # remove duplicated species-region combinations
-  all_dat_dupl <- unique(alldat[ind_dupl,c("Species_name","Region_name")])
+  ind_dupl <- duplicated(alldat[,c("Taxon_name","Region_name")]) # remove duplicated species-region combinations
+  all_dat_dupl <- unique(alldat[ind_dupl,c("Taxon_name","Region_name")])
   ind_rm <- col_dupl <- vector()
   for (j in 1:nrow(all_dat_dupl)){
-    ind_each <- which(alldat$Species_name==all_dat_dupl$Species_name[j] & alldat$Region_name==all_dat_dupl$Region_name[j])
+    ind_each <- which(alldat$Taxon_name==all_dat_dupl$Taxon_name[j] & alldat$Region_name==all_dat_dupl$Region_name[j])
     for (k in 1:dim(alldat)[2]){ # loop over columns
-      if (colnames(alldat)[k]%in%c("Region_name","Species_name")) next # ignore these columns
+      if (colnames(alldat)[k]%in%c("Region_name","Taxon_name")) next # ignore these columns
       if (all(is.na(alldat[ind_each,k]))) next # skip if all NA
       if (all(duplicated(alldat[ind_each,k])[-1])){ # skip if all equal (non-NA)
         next 
@@ -99,9 +105,9 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   all_addit_cols <- unlist(strsplit(all_addit_cols,"; "))
   all_addit_cols <- all_addit_cols[all_addit_cols!="NA"]
   if (any(colnames(alldat)=="First_record")){
-    columns_out <- c("Region_name","Species_name","Species_author","First_record",FileInfo[,1],all_addit_cols)
+    columns_out <- c("Region_name","Taxon_name","Scientific_name","First_record",FileInfo[,1],all_addit_cols)
   } else {
-    columns_out <- c("Region_name","Species_name","Species_author",FileInfo[,1],all_addit_cols)
+    columns_out <- c("Region_name","Taxon_name","Scientific_name",FileInfo[,1],all_addit_cols)
   }
 
   alldat_out <- alldat[,columns_out]
@@ -110,6 +116,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   write.table(alldat_out,file.path("Output",paste(outputfilename,version,".csv",sep="")),row.names=F)
   
   # dat <- read.table(paste("Output/",outputfilename,version,".csv",sep=""),stringsAsFactors = F,header=T)
+  # dat <- dat[dat$GBIFstatus!="Missing",]
   
   ## ending line
   cat(paste("\n Successfully established version",version,"of",outputfilename,"file. \n"))

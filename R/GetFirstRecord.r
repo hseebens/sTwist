@@ -30,6 +30,13 @@ GetFirstRecord <- function(FileInfo){
     
     dat <- read.table(file.path("Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
     
+  #   dat <- dat[dat$GBIFstatus!="Missing",]
+  #   print(inputfiles[i])
+  #   print(dim(dat))
+  #   print(length(unique(dat$Species_name_orig)))
+  #   print(length(unique(dat$Region_name_orig)))
+  # }
+    
     dat$First_record_orig <- dat$First_record # keep original entry
     
     ## treat first records #############

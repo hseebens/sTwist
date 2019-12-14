@@ -1,5 +1,5 @@
 #########################################################################################
-## Prepare example databases of alien species distribution and first records
+## Prepare example databases of alien taxon distribution and first records
 ## as input datasets to create a merged database
 ##
 ## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, Alien amphibians and reptiles
@@ -40,24 +40,24 @@ PrepareDatasets <- function (FileInfo){
     col_names_import <- gsub("^\\s+|\\s+$", "",col_names_import) # trim leading and trailing whitespace
   
     ## check and rename required column names
-    if (!is.na(FileInfo[i,"Column_species_name"]) & FileInfo[i,"Column_species_name"]!=""){
-      col_spec_names <- FileInfo[i,"Column_species_name"]
-      all_column_names <- "Species_name_orig"
-      if (is.na(col_spec_names)) stop(paste("Column with species names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
-      colnames(dat)[col_names_import==col_spec_names] <- "Species_name_orig"
+    if (!is.na(FileInfo[i,"Column_taxon_name"]) & FileInfo[i,"Column_taxon_name"]!=""){
+      col_spec_names <- FileInfo[i,"Column_taxon_name"]
+      all_column_names <- "Taxon_name_orig"
+      if (is.na(col_spec_names)) stop(paste("Column with taxon names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
+      colnames(dat)[col_names_import==col_spec_names] <- "Taxon_name_orig"
       if (!is.na(FileInfo[i,"Column_author"]) & FileInfo[i,"Column_author"]!=""){
         col_author <- FileInfo[i,"Column_author"]
         colnames(dat)[col_names_import==col_author] <- "Author"
         # all_column_names <- c(all_column_names,"Author")
-        dat$Species_name_orig <- paste(dat$Species_name_orig,dat$Author) # add author to species name
+        dat$Taxon_name_orig <- paste(dat$Taxon_name_orig,dat$Author) # add author to taxon name
       }
     }
       
     if (!is.na(FileInfo[i,"Column_scientificName"]) & FileInfo[i,"Column_scientificName"]!=""){
       col_spec_names <- FileInfo[i,"Column_scientificName"]
-      if (is.na(col_spec_names)) stop(paste("Column with species names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
-      colnames(dat)[col_names_import==col_spec_names] <- "Species_name_orig"
-      all_column_names <- "Species_name_orig"
+      if (is.na(col_spec_names)) stop(paste("Column with taxon names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
+      colnames(dat)[col_names_import==col_spec_names] <- "Taxon_name_orig"
+      all_column_names <- "Taxon_name_orig"
     }
 
     col_reg_names <- FileInfo[i,"Column_region_name"]
@@ -107,15 +107,15 @@ PrepareDatasets <- function (FileInfo){
     dat_out[dat_out=="Null"] <- ""
     dat_out[is.na(dat_out)] <- ""
     
-    ## remove rows with missing species and region names
+    ## remove rows with missing taxon and region names
     dat_out <- dat_out[!dat_out$Region_name_orig=="",]
-    dat_out <- dat_out[!dat_out$Species_name_orig=="",]
+    dat_out <- dat_out[!dat_out$Taxon_name_orig=="",]
     
     dat_out$Taxon_group <- FileInfo[i,"Taxon_group"]
     
     colnames(dat_out) <- gsub("\\.+","_",colnames(dat_out))
-    dat_out$Species_name_orig <- gsub("\"","",dat_out$Species_name_orig) # remove additional quotes to avoid difficulties with export
-    dat_out$Species_name_orig <- gsub("\\\\","",dat_out$Species_name_orig) # remove backshlashes
+    dat_out$Taxon_name_orig <- gsub("\"","",dat_out$Taxon_name_orig) # remove additional quotes to avoid difficulties with export
+    dat_out$Taxon_name_orig <- gsub("\\\\","",dat_out$Taxon_name_orig) # remove backshlashes
 
     dat_out <- unique(dat_out) # remove duplicates
     
