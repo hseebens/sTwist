@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584451353515.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "844493216",
+    "id" : "BA0E6AAA",
+    "lastKnownWriteTime" : 1584134075,
+    "last_content_update" : 1584134075,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/sTWIST/R/StandardiseLocationNames.r",
+    "project_path" : "R/StandardiseLocationNames.r",
+    "properties" : {
+        "cursorPosition" : "136,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

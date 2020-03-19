@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584530464340.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1141744916",
+    "id" : "11883D89",
+    "lastKnownWriteTime" : 1584531467,
+    "last_content_update" : 1584531467471,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/OverlapDBs.r",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "66,49",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 11,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

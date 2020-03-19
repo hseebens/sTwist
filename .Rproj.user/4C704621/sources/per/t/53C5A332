@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584460434481.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2105237942",
+    "id" : "53C5A332",
+    "lastKnownWriteTime" : 1584112048,
+    "last_content_update" : 1584112048,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/sTWIST/R/GeteventDate.r",
+    "project_path" : "R/GeteventDate.r",
+    "properties" : {
+        "cursorPosition" : "73,19",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584451354020.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1247839103",
+    "id" : "DB8148B0",
+    "lastKnownWriteTime" : 1584451462,
+    "last_content_update" : 1584451462579,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/sTWIST/R/StandardiseTaxonNames.r",
+    "project_path" : "R/StandardiseTaxonNames.r",
+    "properties" : {
+        "cursorPosition" : "107,64",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
