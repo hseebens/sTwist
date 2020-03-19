@@ -1,0 +1,64 @@
+rm(list=ls())
+
+
+setwd("/home/hanno/Bioinvasion/IndicatorAliens/Workflow") # set working directory
+
+## identify input datasets based on file name "StandardSpec_....csv"
+FileInfo <- read.xlsx(file.path("UnifAlien","Config","DatabaseInfo.xlsx"),sheet=1)
+
+allfiles <- list.files("UnifAlien/Output/Intermediate")
+inputfiles_all <- allfiles[grep("Step4_StandardTaxonNames_",allfiles)]
+inputfiles <- vector()
+for (i in 1:length(inputfiles_all)){
+  inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+}
+inputfiles <- inputfiles[!is.na(inputfiles)]
+inputfiles <- inputfiles[c(3,5,1,2,4)]
+
+mat_entries <- matrix(NA,nr=length(inputfiles),nc=length(inputfiles))
+mat_species <- matrix(NA,nr=length(inputfiles),nc=length(inputfiles))
+mat_regions <- matrix(NA,nr=length(inputfiles),nc=length(inputfiles))
+
+all_names <- gsub("^.*_","",inputfiles)
+all_names <- gsub("\\..*$","",all_names)
+colnames(mat_entries) <- all_names
+rownames(mat_entries) <- all_names
+colnames(mat_species) <- all_names
+rownames(mat_species) <- all_names
+colnames(mat_regions) <- all_names
+rownames(mat_regions) <- all_names
+
+for (i in 1:2){#length(inputfiles)
+  
+  dat1 <- read.table(file.path("UnifAlien","Output","Intermediate",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
+  
+  uni_entries1 <- unique(paste(dat1$Location,dat1$Taxon))
+  uni_species1 <- unique(dat1$Taxon)
+  uni_regions1 <- unique(dat1$Location)
+  
+  for (j in 3:5){#1:length(inputfiles)
+    
+    if (j==i) next
+    
+    dat2 <- read.table(file.path("UnifAlien","Output","Intermediate",paste0(inputfiles[j])),header=T,stringsAsFactors = F)
+    uni_entries2 <- unique(paste(dat2$Location,dat2$Taxon))
+    uni_species2 <- unique(dat2$Taxon)
+    uni_regions2 <- unique(dat2$Location)
+    
+    # if (j %in% c(3,4,5)) {
+    #   mat_entries[i,j] <- round(length(which(uni_entries1%in%uni_entries2))/length(unique(c(uni_entries1,uni_entries2))),2)*100
+    # } else {
+    #   mat_entries[i,j] <- round(length(which(uni_entries1%in%uni_entries2))/length(unique(c(uni_entries2))),2)*100
+    # }
+    mat_entries[i,j] <- round(length(which(uni_entries2%in%uni_entries1))/length(unique(c(uni_entries2))),2)*100
+    mat_species[i,j] <- round(length(which(uni_species2%in%uni_species1))/length(unique(c(uni_species2))),2)*100
+    mat_regions[i,j] <- round(length(which(uni_regions2%in%uni_regions1))/length(unique(c(uni_regions2))),2)*100
+  }
+}
+mat_entries[lower.tri(mat_entries)] <- NA
+mat_species[lower.tri(mat_species)] <- NA
+mat_regions[lower.tri(mat_regions)] <- NA
+
+# write.table(mat_species,"SimMat_DBs_species.csv")
+# write.table(mat_entries,"SimMat_DBs_entries.csv")
+# write.table(mat_regions,"SimMat_DBs_regions.csv")

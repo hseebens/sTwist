@@ -1,0 +1,29 @@
+
+
+dat <- read.table("Output/AlienSpecies_MultipleDBs_Masterfile_vs2.3.csv",stringsAsFactors = F,header=T)
+
+length(unique(dat$Taxon)) ## total number of taxa
+
+length(unique(subset(dat,grepl("FirstRecords",dat$origDB))$Taxon))
+
+
+taxa <- read.table("Output/Taxa_FullList.csv",stringsAsFactors = F,header=T)
+dim(taxa)
+
+table(taxa$GBIFstatus)
+
+length(unique(taxa$Taxon))
+length(unique(taxa$scientificName))
+
+uni_taxa <- unique(taxa[,c("Taxon_orig","GBIFstatus")])
+
+subset(uni_taxa,Taxon=="Allolobophora parva")
+
+miss_taxa <- taxa$Taxon[taxa$GBIFstatus=="Missing"]
+
+## proportion of unresolved taxon names per DB
+length(which(unique(subset(dat,grepl("FirstRecords",dat$origDB))$Taxon)%in%miss_taxa))/length(unique(subset(dat,grepl("FirstRecords",dat$origDB))$Taxon))
+length(which(unique(subset(dat,grepl("GRIIS",dat$origDB))$Taxon)%in%miss_taxa))/length(unique(subset(dat,grepl("GRIIS",dat$origDB))$Taxon))
+length(which(unique(subset(dat,grepl("GloNAF",dat$origDB))$Taxon)%in%miss_taxa))/length(unique(subset(dat,grepl("GloNAF",dat$origDB))$Taxon))
+length(which(unique(subset(dat,grepl("AmphRep",dat$origDB))$Taxon)%in%miss_taxa))/length(unique(subset(dat,grepl("AmphRep",dat$origDB))$Taxon))
+length(which(unique(subset(dat,grepl("GAVIA",dat$origDB))$Taxon)%in%miss_taxa))/length(unique(subset(dat,grepl("GAVIA",dat$origDB))$Taxon))

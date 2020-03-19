@@ -1,0 +1,263 @@
+graphics.off()
+rm(list=ls())
+
+library(openxlsx)
+library(data.table)
+
+setwd("/home/hanno/Bioinvasion/IndicatorAliens/Workflow") # set working directory
+
+
+alldat <- read.table(file.path("UnifAlien","Output","AlienSpecies_MultipleDBs_Masterfile_vs2.3.csv"),header=T,stringsAsFactors = F)
+
+taxonomic <- read.table("UnifAlien/Output/Taxa_FullList.csv",stringsAsFactors = F,header=T)
+
+# ecoplants <- read.xlsx("../../../DATA/SocioEconomic/EconomicPlants/EconomicUses_complete.xlsx",sheet=2)
+
+
+# tax_data <- merge(alldat,taxonomic[,c("Taxon","Class")],by="Taxon")
+
+## subset full database to taxonomic group ###############
+# sub_taxa <- subset(taxonomic,Class%in%c("Amphibia","Reptilia"))$Taxon
+# sub_taxa <- subset(taxonomic,Kingdom%in%c("Plantae"))$Taxon
+# sub_taxa <- subset(taxonomic,Class%in%c("Aves"))$Taxon
+# sub_taxa <- subset(taxonomic,Class%in%c("Mammalia"))$Taxon
+# sub_taxa <- subset(taxonomic,Class%in%c("Insecta"))$Taxon
+# sub_taxa <- subset(taxonomic,Class%in%c("Actinopterygii"))$Taxon
+
+
+# alldat <- subset(alldat,Taxon%in%sub_taxa)
+
+
+time_step <- 5
+
+x11(width=3.5,height=5)
+# png("../Figures/TimeSeries_AliensInvasive_NonPlants.png",width=3.5,height=5,units="in",res=300)
+op <- par(mfrow=c(3,1),mar=c(2,6,0.5,0.5),las=1,tck=-0.02,mgp=c(1,0.7,0))
+
+allspec <- subset(alldat,!is.na(eventDate))
+# # keep only first record globally #########
+dt <- data.table(allspec,key=c("Taxon"))
+dt_min <- dt[,list(eventDate=min(eventDate,na.rm=T)),by=c("Taxon")]
+allspec <- as.data.frame(dt_min)
+# ###########################################
+
+allspec$eventDate <- (round((allspec$eventDate-(time_step/2+0.5))/time_step)*time_step)+(time_step/2)
+tab <- as.data.frame(table(allspec$eventDate),stringsAsFactors = F)
+tab$Var1 <- as.numeric(tab$Var1)
+
+plot(tab$Var1[tab$Var1<=2005],tab$Freq[tab$Var1<=2005],xlab="",pch=16,ylab="",xaxt="n",xaxs="i",yaxs="i",xlim=c(1500,2015),ylim=c(0,max(tab$Freq)+(max(tab$Freq)*0.05)),main="",  #Global increase in alien plant numbers
+     panel.first=c(grid()))
+axis(1,at=seq(1500,2000,50),labels=F,tck=-0.01)
+axis(1,at=seq(1500,2000,50),labels=T)
+lines(tab$Var1[tab$Var1<=2005],runmed(tab$Freq[tab$Var1<=2005],k=9),col=2,lwd=2)
+points(tab$Var1[tab$Var1>2005],tab$Freq[tab$Var1>2005],pch=16,col="grey")
+mtext("All taxa",side=2,line=4.3,las=0)
+mtext(expression(paste('[(5 years)'^-1,"]")),side=2,line=2.5,las=0,cex=1)
+
+invasives_names <- subset(alldat,IsInvasive=="Invasive")$Taxon # identify invasive species names
+invasive <- subset(alldat,Taxon%in%invasives_names) # extract all records of invasive species incl. regions where they are non-invasive
+invasive <- subset(invasive,!is.na(eventDate)) # remove rows without a first record (cannot be used for this analysis)
+# tapply(invasive$IsInvasive,invasive$Taxon,function(s) s!="")
+# # keep only first record globally #########
+dt <- data.table(invasive,key=c("Taxon"))
+dt_min <- dt[,list(eventDate=min(eventDate,na.rm=T)),by=c("Taxon")]  # identify earliest first record for each invasive species
+invasive <- as.data.frame(dt_min)
+# ###########################################
+invasive$eventDate <- (round((invasive$eventDate-(time_step/2+0.5))/time_step)*time_step)+(time_step/2)
+tab_inv <- as.data.frame(table(invasive$eventDate),stringsAsFactors = F)
+tab_inv$Var1 <- as.numeric(tab_inv$Var1)
+
+
+## invasive taxa ##########################
+plot(tab_inv$Var1[tab_inv$Var1<=2005],tab_inv$Freq[tab_inv$Var1<=2005],xlab="",pch=16,ylab="",xaxt="n",xaxs="i",yaxs="i",xlim=c(1500,2015),ylim=c(0,max(tab_inv$Freq)+(max(tab_inv$Freq)*0.05)),main="",  #Global increase in alien plant numbers
+     panel.first=c(grid()))
+axis(1,at=seq(1500,2000,50),labels=F,tck=-0.01)
+axis(1,at=seq(1500,2000,50),labels=T)
+lines(tab_inv$Var1[tab_inv$Var1<=2005],runmed(tab_inv$Freq[tab_inv$Var1<=2005],k=11),col=2,lwd=2)
+points(tab_inv$Var1[tab_inv$Var1>2005],tab$Freq[tab_inv$Var1>2005],pch=16,col="grey")
+mtext("Invasive taxa",side=2,line=4.3,las=0)
+mtext(expression(paste('[(5 years)'^-1,"]")),side=2,line=2.5,las=0,cex=1)
+
+
+
+both_data <- merge(tab,tab_inv,by="Var1")
+both_data$prop <- both_data$Freq.y/both_data$Freq.x
+
+plot(both_data$Var1[both_data$Var1<=2005],both_data$prop[both_data$Var1<=2005],xlab="",pch=16,ylab="",xaxt="n",xaxs="i",yaxs="i",xlim=c(1500,2015),ylim=c(0,0.8),main="",  #Global increase in alien plant numbers
+     panel.first=c(grid()))
+axis(1,at=seq(1500,2000,50),labels=F,tck=-0.01)
+axis(1,at=seq(1500,2000,50),labels=T)
+mtext("Proportion",side=2,line=4.3,las=0)
+mtext("all/invasive taxa",side=2,line=2.5,las=0,cex=1)
+
+par(op)
+# dev.off()
+
+
+
+### missing taxa ####################################################
+
+dat1 <- read.table("UnifAlien/Output/MissingTaxonNames_GRIIS.csv",stringsAsFactors = F)
+dat2 <- read.table("UnifAlien/Output/MissingTaxonNames_GloNAF.csv",stringsAsFactors = F)
+dat3 <- read.table("UnifAlien/Output/MissingTaxonNames_AmphRep.csv",stringsAsFactors = F)
+dat4 <- read.table("UnifAlien/Output/MissingTaxonNames_GAVIA.csv",stringsAsFactors = F)
+dat5 <- read.table("UnifAlien/Output/MissingTaxonNames_FirstRecords.csv",stringsAsFactors = F)
+
+allmissing <- rbind(dat1,dat2,dat3,dat4,dat5)
+length(unique(allmissing$V1))
+
+
+## proportion of invasive species #####################################
+plant_names <- subset(taxonomic,Kingdom%in%c("Plantae"))$Taxon
+
+herptiles <- subset(taxonomic,Class%in%c("Amphibia","Reptilia"))
+herp_names <- herptiles$Taxon
+entries_herps <- subset(alldat,Taxon%in%herp_names)
+invasive_herps <- subset(alldat,Taxon%in%herp_names & IsInvasive=="Invasive")
+length(unique(invasive_herps$Taxon))/length(unique(entries_herps$Taxon))
+
+plants <- subset(taxonomic,Kingdom%in%c("Plantae"))
+plant_names <- plants$Taxon
+entries_plants <- subset(alldat,Taxon%in%plant_names)
+invasive_plants <- subset(alldat,Taxon%in%plant_names & IsInvasive=="Invasive")
+length(unique(invasive_plants$Taxon))/length(unique(entries_plants$Taxon))
+
+
+tapply(herptiles$Taxon,herptiles$Taxon,length)
+
+
+nrow(subset(alldat,Taxon=="Rhinella marina"))
+
+
+
+recDB <- subset(alldat,GloNAF=="x")
+recDB <- subset(alldat,GAVIA=="x")
+recDB <- subset(alldat,AmphRep=="x")
+nrow(subset(recDB,GRIIS=="x"))/nrow(recDB)
+nrow(subset(recDB,FirstRecords=="x"))/nrow(recDB)
+
+length(unique(subset(recDB,GRIIS=="x")$Location))/length(unique(recDB$Location))
+length(unique(subset(recDB,FirstRecords=="x")$Location))/length(unique(recDB$Location))
+
+length(unique(subset(recDB,GRIIS=="x")$Taxon))/length(unique(recDB$Taxon))
+length(unique(subset(recDB,FirstRecords=="x")$Taxon))/length(unique(recDB$Taxon))
+
+
+## identify input datasets based on file name "StandardSpec_....csv"
+FileInfo <- read.xlsx(file.path("UnifAlien","Config","DatabaseInfo.xlsx"),sheet=1)
+
+allfiles <- list.files("UnifAlien/Output")
+inputfiles_all <- allfiles[grep("StandardIntroYear_",allfiles)]
+inputfiles <- vector()
+for (i in 1:length(inputfiles_all)){
+  inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+}
+inputfiles <- inputfiles[!is.na(inputfiles)]
+inputfiles <- inputfiles[c(2,5,1,3,4)]
+
+mat_entries <- matrix(NA,nr=length(inputfiles),nc=length(inputfiles))
+mat_species <- matrix(NA,nr=length(inputfiles),nc=length(inputfiles))
+mat_regions <- matrix(NA,nr=length(inputfiles),nc=length(inputfiles))
+
+all_names <- gsub("^.*_","",inputfiles)
+all_names <- gsub("\\..*$","",all_names)
+colnames(mat_entries) <- all_names
+rownames(mat_entries) <- all_names
+colnames(mat_species) <- all_names
+rownames(mat_species) <- all_names
+colnames(mat_regions) <- all_names
+rownames(mat_regions) <- all_names
+
+for (i in 1:length(inputfiles)){
+  
+  dat1 <- read.table(file.path("UnifAlien","Output",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
+  
+  uni_entries1 <- unique(paste(dat1$Location,dat1$Taxon))
+  uni_species1 <- unique(dat1$Taxon)
+  uni_regions1 <- unique(dat1$Location)
+  
+  for (j in 1:length(inputfiles)){
+    
+    if (j==i) next
+    
+    dat2 <- read.table(file.path("UnifAlien","Output",paste0(inputfiles[j])),header=T,stringsAsFactors = F)
+    uni_entries2 <- unique(paste(dat2$Location,dat2$Taxon))
+    uni_species2 <- unique(dat2$Taxon)
+    uni_regions2 <- unique(dat2$Location)
+    
+    # if (j %in% c(3,4,5)) {
+    #   mat_entries[i,j] <- round(length(which(uni_entries1%in%uni_entries2))/length(unique(c(uni_entries1,uni_entries2))),2)*100
+    # } else {
+    #   mat_entries[i,j] <- round(length(which(uni_entries1%in%uni_entries2))/length(unique(c(uni_entries2))),2)*100
+    # }
+    mat_entries[i,j] <- round(length(which(uni_entries1%in%uni_entries2)))#/length(unique(c(uni_entries1,uni_entries2))),2)*100
+    mat_species[i,j] <- round(length(which(uni_species1%in%uni_species2)))#/length(unique(c(uni_species1,uni_species2))),2)*100
+    mat_regions[i,j] <- round(length(which(uni_regions1%in%uni_regions2)))#/length(unique(c(uni_regions1,uni_regions2))),2)*100
+  }
+}
+mat_entries[lower.tri(mat_entries)] <- NA
+mat_species[lower.tri(mat_species)] <- NA
+mat_regions[lower.tri(mat_regions)] <- NA
+
+# write.table(mat_species,"SimMat_DBs_species.csv")
+# write.table(mat_entries,"SimMat_DBs_entries.csv")
+# write.table(mat_regions,"SimMat_DBs_regions.csv")
+
+
+# alldat <- read.table(file.path("UnifAlien","Output","AlienSpecies_MultipleDBs_Masterfile_vs2.2.csv"),header=T,stringsAsFactors = F)
+# 
+# length(alldat$IsInvasive[alldat$IsInvasive=="Invasive"])
+# table(alldat$IsInvasive)
+# 
+# FR <- nrow(alldat[alldat$FirstRecords=="x",])
+# GRIIS <- nrow(alldat[alldat$GRIIS=="x",])
+# GAVIA <- nrow(alldat[alldat$GAVIA=="x",])
+# AmphRep <- nrow(alldat[alldat$AmphRep=="x",])
+# GloNAF <- nrow(alldat[alldat$GloNAF=="x",])
+# 
+# FR_GRIIS <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GRIIS=="x",])
+# FR_GAVIA <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GAVIA=="x",])
+# FR_AmphRep <- nrow(alldat[alldat$FirstRecords=="x" & alldat$AmphRep=="x",])
+# FR_GloNAF <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GloNAF=="x",])
+# GRIIS_GAVIA <- nrow(alldat[alldat$GRIIS=="x" & alldat$GAVIA=="x",])
+# GRIIS_AmphRep <- nrow(alldat[alldat$GRIIS=="x" & alldat$AmphRep=="x",])
+# GRIIS_GloNAF <- nrow(alldat[alldat$GRIIS=="x" & alldat$GloNAF=="x",])
+# GAVIA_AmphRep <- nrow(alldat[alldat$GAVIA=="x" & alldat$AmphRep=="x",])
+# GAVIA_GloNAF <- nrow(alldat[alldat$GAVIA=="x" & alldat$GloNAF=="x",])
+# AmphRep_GloNAF <- nrow(alldat[alldat$AmphRep=="x" & alldat$GloNAF=="x",])
+# 
+# FR_GRIIS_GAVIA <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GRIIS=="x" & alldat$GAVIA=="x",])
+# FR_GRIIS_AmphRep <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GRIIS=="x" & alldat$AmphRep=="x",])
+# FR_GRIIS_GloNAF <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GRIIS=="x" & alldat$GloNAF=="x",])
+# FR_GAVIA_AmphRep <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GAVIA=="x" & alldat$AmphRep=="x",])
+# FR_GAVIA_GloNAF <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GAVIA=="x" & alldat$GloNAF=="x",])
+# FR_AmphRep_GloNAF <- nrow(alldat[alldat$FirstRecords=="x" & alldat$AmphRep=="x" & alldat$GloNAF=="x",])
+# GRIIS_GAVIA_AmphRep <- nrow(alldat[alldat$AmphRep=="x" & alldat$GRIIS=="x" & alldat$GAVIA=="x",])
+# GRIIS_GAVIA_AmphRep <- nrow(alldat[alldat$AmphRep=="x" & alldat$GRIIS=="x" & alldat$GAVIA=="x",])
+# GRIIS_GAVIA_GloNAF <- nrow(alldat[alldat$GloNAF=="x" & alldat$GRIIS=="x" & alldat$GAVIA=="x",])
+# GRIIS_AmphRep_GloNAF <- nrow(alldat[alldat$GloNAF=="x" & alldat$GRIIS=="x" & alldat$AmphRep=="x",])
+# GAVIA_AmphRep_GloNAF <- nrow(alldat[alldat$GAVIA=="x" & alldat$AmphRep=="x" & alldat$GloNAF=="x",])
+# 
+# FR_GRIIS_GAVIA_AmphRep <- nrow(alldat[alldat$FirstRecords=="x" & alldat$GRIIS=="x" & alldat$GAVIA=="x" & alldat$AmphRep=="x",])
+# 
+# library(VennDiagram)
+# draw.quintuple.venn(area1=FR,area2=GRIIS,area3=GAVIA,area4=AmphRep,area5=GloNAF,
+#                     n12=FR_GRIIS,n13=FR_GAVIA,n14=FR_AmphRep,n15=FR_GloNAF,n23=GRIIS_GAVIA,n24=GRIIS_AmphRep,n25=GRIIS_GloNAF,n34=GAVIA_AmphRep,n35=GAVIA_GloNAF,n45=AmphRep_GloNAF,
+#                     n123 = FR_GRIIS_GAVIA,
+#                     n124 = FR_GRIIS_AmphRep,
+#                     n125 = FR_GRIIS_GloNAF,
+#                     n134 = FR_GAVIA_AmphRep,
+#                     n135 = FR_GAVIA_GloNAF,
+#                     n145 = FR_AmphRep_GloNAF,
+#                     n234 = GRIIS_GAVIA_AmphRep,
+#                     n235 = GRIIS_GAVIA_GloNAF,
+#                     n245 = GRIIS_AmphRep_GloNAF,
+#                     n345 = GAVIA_AmphRep_GloNAF,
+#                     n1234 = 0,
+#                     n1235 = 0,
+#                     n1245 = 0,
+#                     n1345 = 0,
+#                     n2345 = 0,
+#                     n12345 = 0
+# )
+# 

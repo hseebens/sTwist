@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584451605422.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "6724BE55",
+    "lastKnownWriteTime" : 1584460391,
+    "last_content_update" : 1584460391956,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/UnifAlien/R/StandardiseTerms.r",
+    "project_path" : "R/StandardiseTerms.r",
+    "properties" : {
+        "cursorPosition" : "141,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

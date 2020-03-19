@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584460444618.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "B9B94563",
+    "lastKnownWriteTime" : 1584438192,
+    "last_content_update" : 1584438192,
+    "path" : "~/Bioinvasion/IndicatorAliens/Workflow/UnifAlien/R/MergeDatabases.r",
+    "project_path" : "R/MergeDatabases.r",
+    "properties" : {
+        "cursorPosition" : "15,25",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
