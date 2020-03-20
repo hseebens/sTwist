@@ -44,7 +44,8 @@ GeteventDate <- function(FileInfo){
     if (any(colnames(dat)=="eventDate")){ 
     
       for (j in 1:nrow(replacements)){
-        dat$eventDate <- gsub(replacements$Entry[j],replacements$Replacement[j],dat$eventDate)
+        # dat$eventDate <- gsub(replacements$Entry[j],replacements$Replacement[j],dat$eventDate)
+        dat$eventDate[dat$eventDate==replacements$Entry[j]] <- replacements$Replacement[j]
       }
       dat$eventDate <- gsub("^\\s+|\\s+$", "",dat$eventDate) # trim leading and trailing whitespace
       
@@ -65,7 +66,8 @@ GeteventDate <- function(FileInfo){
     if (any(colnames(dat)=="eventDate2")){
 
       for (j in 1:nrow(replacements)){
-        dat$eventDate2 <- gsub(replacements$Entry[j],replacements$Replacement[j],dat$eventDate2)
+        # dat$eventDate2 <- gsub(replacements$Entry[j],replacements$Replacement[j],dat$eventDate2)
+        dat$eventDate2[dat$eventDate2==replacements$Entry[j]] <- replacements$Replacement[j]
       }
       dat$eventDate2 <- gsub("^\\s+|\\s+$", "",dat$eventDate2) # trim leading and trailing whitespace
       
