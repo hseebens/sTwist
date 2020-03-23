@@ -131,6 +131,6 @@ StandardiseLocationNames <- function(FileInfo){
   reg_names <- unique(reg_names[order(reg_names$Location),])
   colnames(reg_names) <- c("Location","Location_orig","origDB")
   
-  write.table(reg_names,file.path("Output","Translation_LocationNames.csv"),row.names=F)
+  write.table(reg_names,file.path("Output","Translated_LocationNames.csv"),row.names=F)
 }
 

@@ -136,6 +136,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   columns_out <- colnames(alldat)[colnames(alldat)%in%c("Location","locationID","Taxon","taxonID","scientificName","eventDate","origDB","habitat","occurrenceStatus","establishmentMeans","degreeOfEstablishment","pathway","references",all_addit_cols)]
   ind <- match(c("Location","locationID","Taxon","scientificName","taxonID","eventDate","habitat","occurrenceStatus","establishmentMeans","degreeOfEstablishment","pathway","origDB","references"),columns_out)
   columns_out <- unique(c(columns_out[ind[which(!is.na(ind))]],columns_out[which(is.na(ind))],all_addit_cols))
+  columns_out <- columns_out[!is.na(columns_out)]
   
   # if (any(colnames(alldat)=="eventDate")){
   #   columns_out <- c("Location","Taxon","scientificName","eventDate","origDB","references",all_addit_cols)
