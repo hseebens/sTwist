@@ -1,9 +1,12 @@
-#### check and replace species names using 'rgibf' GBIF taxonomy ###########
-## requires a data.frame with a column 'species' containing species names ##
+
+####### SInAS workflow: Integration and standardisation of alien species data ###########
+##
+## Step 2c: Standardisation of taxon names
+## check and replace species names using 'rgibf' GBIF taxonomy
 ##
 ## sTwist workshop
 ## Hanno Seebens, Frankfurt, 10.03.2020
-############################################################################
+#########################################################################################
 
 CheckGBIFTax <- function(dat){
   
@@ -82,7 +85,7 @@ CheckGBIFTax <- function(dat){
       if (any(alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT")){
         
         if (nrow(alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT",])>1) {
-          dat$GBIFnote[ind_tax] <- "Multiple accepted names for synonym in GBIF."
+          dat$GBIFnote[ind_tax] <- "Multiple accepted names for synonym in GBIF"
         } 
         
         dat$scientificName[ind_tax] <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT",]$scientificName[1]
@@ -296,7 +299,7 @@ CheckGBIFTax <- function(dat){
       ## check alternative names #################################################################################
       
       if (nrow(alternatives[alternatives$status=="SYNONYM" & alternatives$matchType=="EXACT",])>1) { # check if multiple synonyms are provided; if so leave to next taxon
-        dat$GBIFnote[ind_tax] <- "Multiple synonyms in GBIF."
+        dat$GBIFnote[ind_tax] <- "Multiple synonyms in GBIF"
         next # not possible to identify correct name
       } 
       

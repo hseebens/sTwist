@@ -1,7 +1,7 @@
-#########################################################################################
-## Merging databases of alien species distribution and first records
+
+####### SInAS workflow: Integration and standardisation of alien species data ###########
 ##
-## Step 2: Standardisation of species names using the GBIF backbone taxonomy
+## Step 2c: Standardisation of species names using the GBIF backbone taxonomy
 ##
 ## Species names are standardised according to the GBIF backbone taxonomy. The protocol 
 ## to access GBIF and treat results is implemented in CheckGBIFTax.r.

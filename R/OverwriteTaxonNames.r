@@ -1,6 +1,9 @@
-#########################################################################################
-## Merging databases of alien taxon distribution and first records
-## standardisation of taxon names using the GBIF backbone taxonomy
+
+####### SInAS workflow: Integration and standardisation of alien species data ###########
+##
+## Step 2c: Standardisation of taxon names
+##
+## Replacing taxon names by user-defined list "UserDefinedTaxonNames.xlsx"
 ##
 ## sTwist workshop
 ## Hanno Seebens, Frankfurt, 10.03.2020

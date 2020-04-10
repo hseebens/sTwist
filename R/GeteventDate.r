@@ -1,9 +1,9 @@
-#########################################################################################################
-## Merging databases of alien species distribution and first records
+
+############ SInAS workflow: Integration and standardisation of alien species data #####################
 ##
-## Step 4: Standardisation of first records
+## Step 2d: Standardisation of event dates/first records
 ##
-## First records are modified according to a set of rules defined in Guidelines_eventDates.xlsx,
+## Event dates are modified according to a set of rules defined in "Guidelines_eventDates.xlsx",
 ## then converted to numerics and - if necessary - merged to get single first records.
 ##
 ## sTwist workshop

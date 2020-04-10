@@ -1,9 +1,9 @@
-#########################################################################################
-## Prepare example databases of alien taxon distribution and first records
+
+####### SInAS workflow: Integration and standardisation of alien species data ###########
+##
+## Step 1: Prepare databases of alien taxon distribution and first records
 ## as input datasets to create a merged database
-##
-## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, Alien amphibians and reptiles
-##
+## 
 ## sTwist workshop
 ## Hanno Seebens, Frankfurt, 10.03.2020
 #########################################################################################

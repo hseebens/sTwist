@@ -1,8 +1,7 @@
-#########################################################################################
-## Merging databases of alien species distribution and first records
-## merge datababases after harmonisation of species and country names 
+
+####### SInAS workflow: Integration and standardisation of alien species data ###########
 ##
-## Databases: GRIIS, GloNAF, FirstRecords, GAVIA, amphibians + reptiles
+## Step 2a: Standardisation of terminologies using a set of translation tables 
 ##
 ## sTwist workshop
 ## Hanno Seebens, Frankfurt, 10.03.2020

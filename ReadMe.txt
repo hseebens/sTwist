@@ -1,8 +1,9 @@
 #########################################################################################
-## Merging databases of alien species distribution and first records
+####### SInAS workflow: Integration and standardisation of alien species data ###########
+#########################################################################################
 ##
 ## sTwist workshop
-## Hanno Seebens, 30.10.2019
+## Hanno Seebens, Frankfurt, 06.04.2020
 #########################################################################################
 
 The R scripts contain the implementation of a workflow to standardise and merge 
@@ -13,26 +14,26 @@ The R scripts can be used and modified freely as long as the work is properly ci
 with the aforementioned citation.
 
 In brief, the workflow consists of the following five steps:
-1. step: prepare column names of secies databases  
-2. step: standardisation of species names using GBIF backbone taxonomy; user-defined
-         species names and taxonomic information can be added afterwards
-3. step: standardisation of region names
-4. step: standardisation of first records
-5. step: merging all databases
+1. : Preparation of column names of alien taxon databases  
+2a.: Standardisation of terminologies
+2b.: Standardisation of location names
+2c.: Standardisation of taxon names
+2d.: Standardisation of event dates 
+3. : Merging all standardised databases
 
 Input: 
-Information about databases has to provided in DatabaseInfo.xlsx.
-Modification of country names, species names and rules to treat first records can be
-done in UserDefinedSpeciesNames.xlsx, AllRegionsList.xlsx, SubspecIdentifier.xlsx 
-and Guidelines_FirstRecords.xlsx
+Information about databases has to be provided in DatabaseInfo.xlsx.
+Modification of location names, taxon names, terminologies and rules to treat first records can be
+done in UserDefinedSpeciesNames.xlsx, AllRegionsList.xlsx, SubspecIdentifier.xlsx, 
+Guidelines_FirstRecords.xlsx and five translation tables for pathway, habitat, 
+occurrence status, degree of establishment and establishment means.
 Note that only the first sheet of the Excel file is read in. Others are ignored.
 
 Output: 
-A standardised masterfile built from all databases.
-The masterfile is called AlienSpecies_MultipleDBs_Masterfile_[version].csv and contains a 
-column for each database with an 'x' indicating the respective database.
-Intermediate output files provide information about species names not resoled at
-GBIF, a full list of species names with taxonomic information, missing country names,
-list of original and new country names and a list of unclear first records.
-Additional output from each step can be stored if 'Output' is set to TRUE. This is 
-required if step are run individually.
+A standardised masterfile built from all databases and a full list of taxon names with 
+further taxonomic information.
+Several data sets will be exported by the workflow depending on the degree of 
+matching e.g., missing location names, unresolved terms, missing taxon names. These 
+files can be used for cross-checking and further refinement of the original databases
+and the translation tables.
+
