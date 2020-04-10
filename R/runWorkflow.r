@@ -1,8 +1,11 @@
 #!/usr/bin/env Rscript
 
-#########################################################################################
-## Merging databases of alien taxon distribution and first records
-## Hanno Seebens, Frankfurt, 10.03.2020
+####### SInAS workflow: Integration and standardisation of alien species data ###########
+##
+## Run the whole workflow by e.g. copy-pasting "source("runWorkflow.r")" into the R terminal.
+##
+## sTwist workshop
+## Hanno Seebens, Frankfurt, 06.04.2020
 #########################################################################################
 
 

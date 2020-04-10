@@ -1,13 +1,10 @@
-#########################################################################################
-## Merging databases of alien species distribution and first records
+
+####### SInAS workflow: Integration and standardisation of alien species data ###########
 ##
-## Step 3: Standardisation of region names 
-##
-## Region names are standardised according to the specification provided in 
-## AllRegionsList.xlsx.
+## Step 2b: Standardisation of location names using a translation table "AllLocations.xlsx"
 ##
 ## sTwist workshop
-## Hanno Seebens, 11.12.2019
+## Hanno Seebens, 06.04.2020
 #########################################################################################
 
 
