@@ -76,7 +76,7 @@ StandardiseTaxonNames <- function (FileInfo){
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
     DB <- DB[,!colnames(DB)%in%c("GBIFstatus","GBIFmatchtype","GBIFtaxonRank","GBIFusageKey","GBIFnote","GBIFstatus_Synonym","species","genus","family","class","order","phylum","kingdom")]
     
-    write.table(DB,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(DB,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
     
     oo <- order(mismatches$Taxon)
     mismatches <- unique(mismatches[oo,])
@@ -111,6 +111,6 @@ StandardiseTaxonNames <- function (FileInfo){
     dat <- read.table(file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),header=T,stringsAsFactors = F)
     dat <- merge(dat,taxon_id,by="Taxon_orig",all.x=T)
     
-    write.table(dat,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(dat,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
   }  
 }

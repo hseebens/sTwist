@@ -134,7 +134,7 @@ StandardiseTerms <- function(FileInfo){
       cat(paste0("\n    Warning: Unresolved terms in ",FileInfo[i,"Dataset_brief_name"],". Check file UnresolvedTerms_* in subfolder Check/ \n"))
     }
     
-    write.table(dat,file.path("Output","Intermediate",paste0("Step2_StandardTerms_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(dat,file.path("Output","Intermediate",paste0("Step2_StandardTerms_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
     
   }
 }

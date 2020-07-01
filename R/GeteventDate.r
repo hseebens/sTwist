@@ -117,7 +117,7 @@ GeteventDate <- function(FileInfo){
       write.table(nonnumeric,file.path("Output","Check",paste0("NonNumeric_eventDates_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
     } 
 
-    write.table(dat,file.path("Output","Intermediate",paste0("Step5_StandardIntroYear_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(dat,file.path("Output","Intermediate",paste0("Step5_StandardIntroYear_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
     
   }
   
