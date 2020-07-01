@@ -1,9 +1,6 @@
-SInAS_Workflow
-
-
 ## SInAS workflow: Integration and standardisation of alien species occurrence data
-# sTwist workshop
-# Hanno Seebens, Frankfurt, 06.04.2020
+sTwist workshop at German Centre for Integrative Biodiversity Research (iDiv) 
+Author: Hanno Seebens, Frankfurt, 01.07.2020
 
 The R scripts contain the implementation of a workflow to standardise and integrate 
 databases of alien species occurrences and years of first record. The workflow is 
