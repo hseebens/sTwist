@@ -43,6 +43,7 @@ StandardiseTaxonNames <- function (FileInfo){
     dat$Taxon_orig <- gsub("^\\s+|\\s+$", "",dat$Taxon_orig) # trim leading and trailing whitespace
     dat$Taxon_orig <- gsub("[$\xc2\xa0]", " ",dat$Taxon_orig) # replace weird white space with recognised white space
     dat$Taxon_orig <- gsub("  "," ",dat$Taxon_orig)
+    dat$Taxon_orig <- gsub("\n"," ",dat$Taxon_orig)
     
     dat <- dat[!is.na(dat$Taxon_orig),]
     dat <- dat[dat$Taxon_orig!="",]

@@ -81,6 +81,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
     alldat[,i] <- gsub("^; ","",alldat[,i]) # clean new column
     alldat[,i] <- gsub("; $","",alldat[,i]) # clean new column
     alldat[,i] <- gsub(" ; "," ",alldat[,i]) # clean new column
+    alldat[,i] <- gsub("NA","",alldat[,i]) # clean new column
   }
 
 

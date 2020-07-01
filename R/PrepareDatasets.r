@@ -38,8 +38,8 @@ PrepareDatasets <- function (FileInfo){
   
     ## correct modification of import of column names through R
     col_names_import <- colnames(dat)
-    col_names_import <- gsub("\\.+"," ",col_names_import)
-    col_names_import <- gsub("^\\s+|\\s+$", "",col_names_import) # trim leading and trailing whitespace
+    # col_names_import <- gsub("\\.+"," ",col_names_import)
+    # col_names_import <- gsub("^\\s+|\\s+$", "",col_names_import) # trim leading and trailing whitespace
   
     ## check and rename required column names
 
@@ -61,6 +61,7 @@ PrepareDatasets <- function (FileInfo){
         colnames(dat)[col_names_import==col_author] <- "Author"
         # all_column_names <- c(all_column_names,"Author")
         dat$Taxon_orig <- paste(dat$Taxon_orig,dat$Author) # add author to taxon name
+        dat$Taxon_orig <- gsub(" NA","",dat$Taxon_orig) # remove missing author names
       }
     }
       

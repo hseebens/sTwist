@@ -123,7 +123,7 @@ GeteventDate <- function(FileInfo){
   
   if (length(translated_eventDates)>0){
     all_translated <- unique(do.call("rbind",translated_eventDates))
-    write.table(all_translated,file.path("Output","Translated_evenDates.csv"),row.names=F)
+    write.table(all_translated,file.path("Output","Translated_eventDates.csv"),row.names=F)
   }
 }
   
