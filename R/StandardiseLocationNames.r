@@ -116,12 +116,12 @@ StandardiseLocationNames <- function(FileInfo){
     }
     
     dat_regnames <- dat_regnames[!is.na(dat_regnames$locationID),]
-    write.table(dat_regnames,file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
+    write.table(dat_regnames,file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
   }
   
   reg_names <- vector()
   for (i in 1:length(inputfiles)){
-    dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F,header=T)
+    dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F)
     reg_names <- rbind(reg_names,cbind(dat[,c("Location","Location_orig")],FileInfo[i,1]))
   }
   reg_names <- reg_names[reg_names$Location!=reg_names$Location_orig,] # export only region names deviating from the original

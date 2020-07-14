@@ -166,6 +166,6 @@ PrepareDatasets <- function (FileInfo){
 
     dat_out <- unique(dat_out) # remove duplicates
     
-    write.table(dat_out,file.path("Output","Intermediate",paste("Step1_StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep="")),row.names = F)
+    write.table(dat_out,file.path("Output","Intermediate",paste("Step1_StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep="")))
   }
 }
