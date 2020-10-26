@@ -14,8 +14,9 @@ StandardiseLocationNames <- function(FileInfo){
   allfiles <- list.files(file.path("Output","Intermediate"))
   inputfiles_all <- allfiles[grep("Step2_StandardTerms_",allfiles)]
   inputfiles <- vector()
-  for (i in 1:length(inputfiles_all)){
-    inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+  for (i in 1:nrow(FileInfo)){
+    # inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+    inputfiles <- c(inputfiles,paste("Step1_StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
   
@@ -116,12 +117,12 @@ StandardiseLocationNames <- function(FileInfo){
     }
     
     dat_regnames <- dat_regnames[!is.na(dat_regnames$locationID),]
-    write.table(dat_regnames,file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(dat_regnames,file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
   }
   
   reg_names <- vector()
   for (i in 1:length(inputfiles)){
-    dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F)
+    dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F,header=T)
     reg_names <- rbind(reg_names,cbind(dat[,c("Location","Location_orig")],FileInfo[i,1]))
   }
   reg_names <- reg_names[reg_names$Location!=reg_names$Location_orig,] # export only region names deviating from the original
