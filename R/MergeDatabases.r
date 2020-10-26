@@ -14,8 +14,9 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   allfiles <- list.files(file.path("Output","Intermediate"))
   inputfiles_all <- allfiles[grep("Step5_StandardIntroYear_",allfiles)]
   inputfiles <- vector()
-  for (i in 1:length(inputfiles_all)){
-    inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+  for (i in 1:nrow(FileInfo)){
+    # inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+    inputfiles <- c(inputfiles,paste("Step1_StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
   

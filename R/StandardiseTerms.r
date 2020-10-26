@@ -14,8 +14,9 @@ StandardiseTerms <- function(FileInfo){
   allfiles <- list.files(file.path("Output","Intermediate"))
   inputfiles_all <- allfiles[grep("Step1_StandardColumns_",allfiles)]
   inputfiles <- vector()
-  for (i in 1:length(inputfiles_all)){
-    inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+  for (i in 1:nrow(FileInfo)){
+    # inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
+    inputfiles <- c(inputfiles,paste("Step1_StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
   
@@ -134,7 +135,7 @@ StandardiseTerms <- function(FileInfo){
       cat(paste0("\n    Warning: Unresolved terms in ",FileInfo[i,"Dataset_brief_name"],". Check file UnresolvedTerms_* in subfolder Check/ \n"))
     }
     
-    write.table(dat,file.path("Output","Intermediate",paste0("Step2_StandardTerms_",FileInfo[i,"Dataset_brief_name"],".csv")))
+    write.table(dat,file.path("Output","Intermediate",paste0("Step2_StandardTerms_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
     
   }
 }
