@@ -20,7 +20,7 @@ StandardiseTaxonNames <- function (FileInfo){
   inputfiles <- vector()
   for (i in 1:nrow(FileInfo)){
     # inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
-    inputfiles <- c(inputfiles,paste("Step1_StandardColumns_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
+    inputfiles <- c(inputfiles,paste("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
   
