@@ -4,9 +4,10 @@ Author: Hanno Seebens, Frankfurt, 01.07.2020
 
 The R scripts contain the implementation of a workflow to standardise and integrate 
 databases of alien species occurrences and years of first record. The workflow is 
-described in detail in the manual 'Manual SInAS workflow.pdf' and in Seebens et al. 
-"A workflow for standardising and integrating alien species distribution data" to be
-published in the journal Neobiota.
+described in detail in the manual 'Manual SInAS workflow.pdf' and in Seebens, H., 
+D. A. Clarke, Q. Groom, J. R. U. Wilson, E. García-Berthou, I. Kühn, M. Roigé, 
+S. Pagad, F. Essl, J. Vicente, M. Winter, and M. McGeoch. 2020. A workflow for 
+standardising and integrating alien species distribution data. NeoBiota 59:39–59.
 
 The R scripts can be used and modified freely as long as the work is properly cited
 with the aforementioned citation of the scientific paper.
