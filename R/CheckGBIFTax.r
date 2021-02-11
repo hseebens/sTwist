@@ -46,7 +46,7 @@ CheckGBIFTax <- function(dat){
     
     # select species name and download taxonomy
     ind_tax <- which(dat$Taxon==taxlist[j])
-    db_all <- name_backbone_verbose(taxlist[j],strict=T) # check for names and synonyms
+    db_all <- name_backbone_verbose("Acacia concinna",strict=T) # check for names and synonyms
     db <- db_all[["data"]]
     alternatives <- db_all$alternatives
     
@@ -294,7 +294,7 @@ CheckGBIFTax <- function(dat){
           try(dat$kingdom[ind_tax]     <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Mammalia",]$kingdom[1],silent=T)
         }
       }
-    } else if (any(alternatives$status=="SYNONYM" & alternatives$matchType=="EXACT" & colnames(alternatives)=="species")) { # check for synonyms in 'alternatives'
+    } else if (any(alternatives$status=="SYNONYM" & alternatives$matchType=="EXACT" & any(colnames(alternatives)=="species"))) { # check for synonyms in 'alternatives'
 
       ## check alternative names #################################################################################
       
