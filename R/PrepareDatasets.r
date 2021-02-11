@@ -26,6 +26,8 @@ PrepareDatasets <- function (FileInfo){
     data_name <- FileInfo[i,"File_name_to_load"]
     dat <- read.xlsx(file.path("Inputfiles",data_name),sheet=1)
     
+    # FileInfo[i,] <- gsub(" ",".",FileInfo[i,]) # replace space with "." (as done during the import of data)
+    
   #   print(inputfiles[i])
   #   print(dim(dat))
   #   print(length(unique(dat$scientificName)))

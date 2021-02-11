@@ -149,7 +149,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   alldat_out[is.na(alldat_out)] <- ""
   alldat_out[alldat_out=="NA"] <- ""
   
-  write.table(alldat_out,file.path("Output",paste(outputfilename,version,".csv",sep="")),row.names=F)
+  write.table(alldat_out,file.path("Output",paste(outputfilename,"_",version,".csv",sep="")),row.names=F)
   
   # dat <- read.table(paste("Output/",outputfilename,version,".csv",sep=""),stringsAsFactors = F,header=T)
   # dat <- dat[dat$GBIFstatus!="Missing",]

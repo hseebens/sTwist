@@ -46,7 +46,7 @@ CheckGBIFTax <- function(dat){
     
     # select species name and download taxonomy
     ind_tax <- which(dat$Taxon==taxlist[j])
-    db_all <- name_backbone(taxlist[j],verbose=T,strict=T) # check for names and synonyms
+    db_all <- name_backbone_verbose(taxlist[j],strict=T) # check for names and synonyms
     db <- db_all[["data"]]
     alternatives <- db_all$alternatives
     
@@ -109,7 +109,7 @@ CheckGBIFTax <- function(dat){
         dat$GBIFtaxonRank[ind_tax]      <- db[db$status=="SYNONYM" & db$matchType=="EXACT",]$rank[1]
         dat$GBIFusageKey[ind_tax]      <- db[db$status=="SYNONYM" & db$matchType=="EXACT",]$usageKey[1]
         
-        db_all_2 <- name_backbone(dat$Taxon[ind_tax][1],strict=T,verbose=T) # get scientific name
+        db_all_2 <- name_backbone_verbose(dat$Taxon[ind_tax][1],strict=T) # get scientific name
         db_2 <- db_all_2[["data"]]
 
         if (db_2$matchType=="EXACT"){ # exact matches
@@ -311,7 +311,7 @@ CheckGBIFTax <- function(dat){
       dat$GBIFnote[ind_tax] <- "Homonym in GBIF"
       
       ## try to get author name of synonym (not provided in 'db')
-      db_all_2 <- name_backbone(dat$Taxon[ind_tax][1],verbose=T)
+      db_all_2 <- name_backbone_verbose(dat$Taxon[ind_tax][1])
       db_2 <- db_all_2[["data"]]
       if (db_2$matchType=="EXACT"){
         

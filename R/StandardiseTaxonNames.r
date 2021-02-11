@@ -102,8 +102,8 @@ StandardiseTaxonNames <- function (FileInfo){
   fullspeclist_2 <- fullspeclist_2[order(fullspeclist_2$sequence),]
   fullspeclist_2 <- fullspeclist_2[,-which(colnames(fullspeclist_2)=="sequence")]
   
-  write.table(fullspeclist_2,file.path("Output","Taxa_FullList.csv"),row.names=F)
-  
+  write.table(fullspeclist_2,file.path("Output",paste0(outputfilename,"_",version,"_","FullTaxaList.csv")),row.names=F)
+              
   
   ## add taxon ID to data sets ##########
   

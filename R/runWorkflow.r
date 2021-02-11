@@ -18,15 +18,14 @@ library(openxlsx)
 library(data.table)
 
 ## option for storing the intermediate and final output
-outputfilename <- "AlienSpecies_MultipleDBs_Masterfile_vs" # name of final output file
+outputfilename <- "SInAS_AlienSpeciesDB" # name of final output file
 
-version <- "2.3" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "2.3.1" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
-
 ################################################################################
-### load functions #######################################################
+### load functions #############################################################
 source(file.path("R","PrepareDatasets.r")) # preparing example data sets as input files
 source(file.path("R","StandardiseTaxonNames.r")) # standardising taxon names, requires GBIF connection, takes some time...
 source(file.path("R","OverwriteTaxonNames.r")) # replace taxon names with user-defined ones
