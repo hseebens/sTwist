@@ -46,7 +46,7 @@ CheckGBIFTax <- function(dat){
     
     # select species name and download taxonomy
     ind_tax <- which(dat$Taxon==taxlist[j])
-    db_all <- name_backbone_verbose("Acacia concinna",strict=T) # check for names and synonyms
+    db_all <- name_backbone_verbose(taxlist[j],strict=T) # check for names and synonyms
     db <- db_all[["data"]]
     alternatives <- db_all$alternatives
     
