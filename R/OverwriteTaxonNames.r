@@ -26,7 +26,7 @@ OverwriteTaxonNames <- function (FileInfo){
   ## overwrite taxonomic information ################################################
   
   new_names <- read.xlsx(file.path("Config","UserDefinedTaxonNames.xlsx"))
-  fullspeclist <- read.table(file.path("Output","Taxa_FullList.csv"),stringsAsFactors = F,header=T)
+  fullspeclist <- read.table(file.path("Output",paste0(outputfilename,"_",version,"_","FullTaxaList.csv")),stringsAsFactors = F,header=T)
 
   ## loop over all data sets 
   for (i in 1:length(inputfiles)){ # loop over inputfiles 
@@ -67,5 +67,5 @@ OverwriteTaxonNames <- function (FileInfo){
     write.table(dat,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
   }
   
-  write.table(fullspeclist,file.path("Output","Taxa_FullList.csv"),row.names=F)
+  write.table(fullspeclist,file.path("Output",paste0(outputfilename,"_",version,"_","FullTaxaList.csv")),row.names=F)
 }

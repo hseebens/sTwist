@@ -122,7 +122,7 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   ## output #############################################
 
   ## sort by taxonomic tree
-  fulltaxalist <- read.table(file.path("Output","Taxa_FullList.csv"),stringsAsFactors = F,header=T)
+  fulltaxalist <- read.table(file.path("Output",paste0(outputfilename,"_",version,"_","FullTaxaList.csv")),stringsAsFactors = F,header=T)
   fulltaxalist <- unique(fulltaxalist[,c("taxonID","kingdom","phylum","class","order","family")])
   alldat <- merge(alldat,fulltaxalist,by="taxonID",all.x=T)
   
