@@ -119,6 +119,12 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
   if (length(ind_rm)>0) alldat <- alldat[-unique(ind_rm),] # remove all duplicates
   if (length(col_dupl)>0) cat(paste0("\n    Warning: Multiple entries for the same record. Check column '",unique(col_dupl),"' in final data set for entries separated by ';'. \n"))
 
+  ## select minimum first record
+  ind_dupl_fr <- grep("; ",alldat$eventDate)
+  single_fr <- lapply(strsplit(alldat$eventDate[ind_dupl_fr],"; "),function(s) min(as.integer(s)))
+  alldat$eventDate[ind_dupl_fr] <- unlist(single_fr)
+  
+  
   ## output #############################################
 
   ## sort by taxonomic tree
