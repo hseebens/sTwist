@@ -82,7 +82,8 @@ StandardiseLocationNames <- function(FileInfo){
         keywords <- regions$keywords[ind_keys[j]]
       }
       for (k in 1:length(keywords)){
-        ind_match <- grep(keywords[k],dat_match1$Location_lower) 
+        # ind_match <- grep(keywords[k],dat_match1$Location_lower) 
+        ind_match <- which(dat_match1$Location_lower==keywords[k]) 
         if (length(unique(regions$Location[ind_keys[j]]))>1) cat(paste0("    Warning: ",keywords[k],"match multiple location names. Refine keywords!"))
         dat_match1$Location[ind_match] <- regions$Location[ind_keys[j]]
         dat_match1$countryCode[ind_match]             <- regions$countryCode[ind_keys[j]]
