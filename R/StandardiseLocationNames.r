@@ -22,8 +22,8 @@ StandardiseLocationNames <- function(FileInfo){
   
   ## load location table #################################################
   regions <- read.xlsx(file.path("Config","AllLocations.xlsx"),sheet=1,na.strings ="")
-  regions$keywords <- gsub("\\(","\\\\(",regions$keywords)
-  regions$keywords <- gsub("\\)","\\\\)",regions$keywords)
+  # regions$keywords <- gsub("\\(","\\\\(",regions$keywords)
+  # regions$keywords <- gsub("\\)","\\\\)",regions$keywords)
   regions$keywords <- tolower(regions$keywords) # set all to lower case for matching
   regions$Location_lower <- tolower(regions$Location) # set all to lower case for matching
   
@@ -86,7 +86,7 @@ StandardiseLocationNames <- function(FileInfo){
         ind_match <- which(dat_match1$Location_lower==keywords[k]) 
         if (length(unique(regions$Location[ind_keys[j]]))>1) cat(paste0("    Warning: ",keywords[k],"match multiple location names. Refine keywords!"))
         dat_match1$Location[ind_match] <- regions$Location[ind_keys[j]]
-        dat_match1$countryCode[ind_match]             <- regions$countryCode[ind_keys[j]]
+        dat_match1$countryCode[ind_match] <- regions$countryCode[ind_keys[j]]
       }
     }
 
@@ -117,19 +117,21 @@ StandardiseLocationNames <- function(FileInfo){
       write.table(sort(unique(missing)),file.path("Output","Check",paste0("Missing_Locations_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names = F,col.names=F)
     }
     
-    dat_regnames <- dat_regnames[!is.na(dat_regnames$locationID),]
+    # dat_regnames <- dat_regnames[!is.na(dat_regnames$locationID),]
     write.table(dat_regnames,file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
   }
   
-  reg_names <- vector()
-  for (i in 1:length(inputfiles)){
-    dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F,header=T)
-    reg_names <- rbind(reg_names,cbind(dat[,c("Location","Location_orig")],FileInfo[i,1]))
+  if (nrow(dat_regnames)>0){ # avoid step when no region names have changed
+    reg_names <- vector()
+    for (i in 1:length(inputfiles)){
+      dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F,header=T)
+      reg_names <- rbind(reg_names,cbind(dat[,c("Location","Location_orig")],FileInfo[i,1]))
+    }
+    reg_names <- reg_names[reg_names$Location!=reg_names$Location_orig,] # export only region names deviating from the original
+    reg_names <- unique(reg_names[order(reg_names$Location),])
+    colnames(reg_names) <- c("Location","Location_orig","origDB")
+    
+    write.table(reg_names,file.path("Output","Translated_LocationNames.csv"),row.names=F)
   }
-  reg_names <- reg_names[reg_names$Location!=reg_names$Location_orig,] # export only region names deviating from the original
-  reg_names <- unique(reg_names[order(reg_names$Location),])
-  colnames(reg_names) <- c("Location","Location_orig","origDB")
-  
-  write.table(reg_names,file.path("Output","Translated_LocationNames.csv"),row.names=F)
 }
 

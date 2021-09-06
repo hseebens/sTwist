@@ -18,9 +18,10 @@ library(openxlsx)
 library(data.table)
 
 ## option for storing the intermediate and final output
-outputfilename <- "SInAS_AlienSpeciesDB" # name of final output file
+# outputfilename <- "SInAS_AlienSpeciesDB" # name of final output file
+outputfilename <- "CH4_Inv" # name of final output file
 
-version <- "2.3.1" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "2.4" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
