@@ -81,8 +81,9 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
     alldat[,i] <- gsub("NA; ","",alldat[,i]) # clean new column
     alldat[,i] <- gsub("^; ","",alldat[,i]) # clean new column
     alldat[,i] <- gsub("; $","",alldat[,i]) # clean new column
+    alldat[,i] <- gsub(";$","",alldat[,i]) # clean new column
     alldat[,i] <- gsub(" ; "," ",alldat[,i]) # clean new column
-    alldat[,i] <- gsub("NA","",alldat[,i]) # clean new column
+    alldat[,i] <- gsub("^NA$","",alldat[,i]) # clean new column
   }
 
 
@@ -108,7 +109,9 @@ MergeDatabases <- function(FileInfo,version,outputfilename,output){
           if (colnames(alldat)[k]=="eventDate"){ # treat first records differently
             alldat[ind_each,k][1] <- min(alldat[ind_each,k],na.rm = T) # select earliest first record
           } else {
-            alldat[ind_each,k][1] <- paste(unique(alldat[ind_each,k][!ind_NA]),collapse="; ") # concatenate unequal row entries
+            entries <- unique(alldat[ind_each,k][!ind_NA])
+            entries <- entries[entries!=""]
+            alldat[ind_each,k][1] <- paste(entries,collapse="; ") # concatenate unequal row entries
             col_dupl <- c(col_dupl,colnames(alldat)[k]) # store column with deviating information for report
           }
         }

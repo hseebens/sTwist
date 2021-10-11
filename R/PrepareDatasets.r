@@ -24,8 +24,16 @@ PrepareDatasets <- function (FileInfo){
     
     ## load data set
     data_name <- FileInfo[i,"File_name_to_load"]
-    dat <- read.xlsx(file.path("Inputfiles",data_name),sheet=1)
-    
+    if (!file.exists(file.path("Inputfiles",data_name))) stop(paste0("File ’",data_name,"’ does not exist!"))
+    if (grepl("\\.xlsx$",data_name)){
+      dat <- try(read.xlsx(file.path("Inputfiles",data_name),sheet=1),silent=T)
+    } 
+    if (grepl("\\.csv$",data_name)){
+      dat <- try(read.csv(file.path("Inputfiles",data_name)),silent=T)
+      if (dim(dat)[2]<3)  dat <- try(as.data.frame(fread(file.path("Inputfiles",data_name)),stringsAsFactors=F),silent=T)
+    }
+    if (class(dat)=="try-error") stop(paste0("File ’",data_name,"’ should be csv or xlsx format"))
+
     # FileInfo[i,] <- gsub(" ",".",FileInfo[i,]) # replace space with "." (as done during the import of data)
     
   #   print(inputfiles[i])
@@ -55,35 +63,30 @@ PrepareDatasets <- function (FileInfo){
     
     if (!is.na(FileInfo[i,"Column_Taxon"]) & FileInfo[i,"Column_Taxon"]!=""){
       col_spec_names <- FileInfo[i,"Column_Taxon"]
-      all_column_names <- "Taxon_orig"
+      all_column_names <- col_spec_names
       if (is.na(col_spec_names)) stop(paste("Column with taxon names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
-      colnames(dat)[col_names_import==col_spec_names] <- "Taxon_orig"
       if (!is.na(FileInfo[i,"Column_author"]) & FileInfo[i,"Column_author"]!=""){
         col_author <- FileInfo[i,"Column_author"]
-        colnames(dat)[col_names_import==col_author] <- "Author"
         # all_column_names <- c(all_column_names,"Author")
-        dat$Taxon_orig <- paste(dat$Taxon_orig,dat$Author) # add author to taxon name
-        dat$Taxon_orig <- gsub(" NA","",dat$Taxon_orig) # remove missing author names
+        dat[,col_spec_names] <- paste(dat[,col_spec_names],dat[,col_author]) # add author to taxon name
+        dat[,col_spec_names] <- gsub(" NA","",dat[,col_spec_names]) # remove missing author names
       }
     }
-      
+    
     if (!is.na(FileInfo[i,"Column_scientificName"]) & FileInfo[i,"Column_scientificName"]!=""){
       col_spec_names <- FileInfo[i,"Column_scientificName"]
       if (is.na(col_spec_names)) stop(paste("Column with taxon names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
-      colnames(dat)[col_names_import==col_spec_names] <- "Taxon_orig"
-      all_column_names <- "Taxon_orig"
+      all_column_names <- col_spec_names
     }
 
     col_reg_names <- FileInfo[i,"Column_Location"]
     if (is.na(col_reg_names)) stop(paste("Column with location names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
-    colnames(dat)[col_names_import==col_reg_names] <- "Location_orig"
-    all_column_names <- c(all_column_names,"Location_orig")
+    all_column_names <- c(all_column_names,col_reg_names)
 
     ## check and rename optional column names
     if (!is.na(FileInfo[i,"Column_kingdom"]) & FileInfo[i,"Column_kingdom"]!=""){
       col_kingdom <- FileInfo[i,"Column_kingdom"]
-      colnames(dat)[col_names_import==col_kingdom] <- "Kingdom_user"
-      all_column_names <- c(all_column_names,"Kingdom_user")
+      all_column_names <- c(all_column_names,col_kingdom)
     }
     # if (!is.na(FileInfo[i,"Column_island_name"]) & FileInfo[i,"Column_island_name"]!=""){
     #   col_islandname <- FileInfo[i,"Column_island_name"]
@@ -92,18 +95,15 @@ PrepareDatasets <- function (FileInfo){
     # }
     if (!is.na(FileInfo[i,"Column_country_ISO"]) & FileInfo[i,"Column_country_ISO"]!=""){
       col_country_code <- FileInfo[i,"Column_country_ISO"]
-      colnames(dat)[col_names_import==col_country_code] <- "Country_ISO"
-      all_column_names <- c(all_column_names,"Country_ISO")
+      all_column_names <- c(all_column_names,col_country_code)
     }
     if (!is.na(FileInfo[i,"Column_eventDate1"]) & FileInfo[i,"Column_eventDate1"]!=""){
       col_eventDate_1 <- FileInfo[i,"Column_eventDate1"]
-      colnames(dat)[col_names_import==col_eventDate_1] <- "eventDate"
-      all_column_names <- c(all_column_names,"eventDate")
+      all_column_names <- c(all_column_names,col_eventDate_1)
     }
     if (!is.na(FileInfo[i,"Column_eventDate2"]) & FileInfo[i,"Column_eventDate2"]!=""){
       col_eventDate_2 <- FileInfo[i,"Column_eventDate2"]
-      colnames(dat)[col_names_import==col_eventDate_2] <- "eventDate2"
-      all_column_names <- c(all_column_names,"eventDate2")
+      all_column_names <- c(all_column_names,col_eventDate_2)
     }
     if (!is.na(FileInfo[i,"Column_establishmentMeans"]) & FileInfo[i,"Column_establishmentMeans"]!=""){
       col_establishmentMeans <- FileInfo[i,"Column_establishmentMeans"]
@@ -125,7 +125,7 @@ PrepareDatasets <- function (FileInfo){
       col_degreeOfEstablishment <- FileInfo[i,"Column_degreeOfEstablishment"]
       if (col_establishmentMeans==col_degreeOfEstablishment){ # check if same column has been assigned before in establishmentMeans
         dat$degreeOfEstablishment <- dat$establishmentMeans # if yes, duplicate column
-      } else if (col_establishmentMeans==occurrenceStatus){
+      } else if (col_establishmentMeans==col_occurrenceStatus){
         dat$degreeOfEstablishment <- dat$occurrenceStatus # if yes, duplicate column
       } else {
         colnames(dat)[col_names_import==col_degreeOfEstablishment] <- "degreeOfEstablishment"
@@ -135,14 +135,11 @@ PrepareDatasets <- function (FileInfo){
     }
     if (!is.na(FileInfo[i,"Column_habitat"]) & FileInfo[i,"Column_habitat"]!=""){
       col_habitat <- FileInfo[i,"Column_habitat"]
-      colnames(dat)[col_names_import==col_habitat] <- "habitat"
-      all_column_names <- c(all_column_names,"habitat")
-      dat$habitat <- tolower(dat$habitat)
+      all_column_names <- c(all_column_names,col_habitat)
     }
     if (!is.na(FileInfo[i,"Column_references"]) & FileInfo[i,"Column_references"]!=""){
       col_references <- FileInfo[i,"Column_references"]
-      colnames(dat)[col_names_import==col_references] <- "references"
-      all_column_names <- c(all_column_names,"references")
+      all_column_names <- c(all_column_names,col_references)
     }
 
     if (!is.na(FileInfo[i,"Column_additional"]) & FileInfo[i,"Column_additional"]!=""){
@@ -153,8 +150,28 @@ PrepareDatasets <- function (FileInfo){
     
     ## keep required, optional and additional columns
     dat_out <- dat[,all_column_names]
-    dat_out[dat_out=="Null"] <- ""
+    dat_out[is.null(dat_out)] <- ""
     dat_out[is.na(dat_out)] <- ""
+    
+    ## standardise column names
+    col_names_import <- colnames(dat_out)
+    if (exists("col_spec_names")) colnames(dat_out)[col_names_import==col_spec_names] <- "Taxon_orig"
+    if (exists("col_reg_names")) colnames(dat_out)[col_names_import==col_reg_names] <- "Location_orig"
+    if (exists("col_kingdom")) colnames(dat_out)[col_names_import==col_kingdom] <- "Kingdom_user"
+    if (exists("col_country_code")) colnames(dat_out)[col_names_import==col_country_code] <- "Country_ISO"
+    if (exists("col_eventDate_1")) colnames(dat_out)[col_names_import==col_eventDate_1] <- "eventDate"
+    if (exists("col_eventDate_2")) colnames(dat_out)[col_names_import==col_eventDate_2] <- "eventDate2"
+    if (exists("col_habitat")) colnames(dat_out)[col_names_import==col_habitat] <- "habitat"
+    if (exists("col_references")) colnames(dat_out)[col_names_import==col_references] <- "references"
+    
+    if (exists("col_habitat")) dat$habitat <- tolower(dat$habitat)
+    
+    options(warn=-1)
+    rm(col_spec_names,col_reg_names,col_kingdom,col_country_code,col_eventDate_1,
+       col_eventDate_2,col_establishmentMeans,col_occurrenceStatus,
+       col_habitat,col_references,col_establishmentMeans,col_occurrenceStatus,
+       col_degreeOfEstablishment,col_degreeOfEstablishment)
+    options(warn=1)
     
     ## remove rows with missing taxon and region names
     dat_out <- dat_out[!dat_out$Location_orig=="",]
