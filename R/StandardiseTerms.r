@@ -46,14 +46,14 @@ StandardiseTerms <- function(FileInfo){
     if (any(colnames(dat)=="establishmentMeans")){
       dat$establishmentMeans <- gsub("^\\s+|\\s+$", "",dat$establishmentMeans) # trim leading and trailing whitespace
       # identify matches of alternative terms...
-      ind <- match(dat$establishmentMeans,tolower(translation_estabmeans$origTerm)) # identify matches
+      ind <- match(tolower(dat$establishmentMeans),tolower(translation_estabmeans$origTerm)) # identify matches
       unresolved_estabmeans <- unique(dat$establishmentMeans[is.na(ind)]) # store mis-matches
       resolved_estabmeans <- unique(dat$establishmentMeans[!is.na(ind)]) # store mis-matches
       translated <- translation_estabmeans$newTerm[ind]
       indNA <- is.na(translated)
       dat$establishmentMeans[!indNA] <- translated[!indNA]  # replace strings
       # identify matches of Darwin Core
-      ind <- match(dat$establishmentMeans,tolower(translation_estabmeans$newTerm)) # identify matches with Darwin Core
+      ind <- match(tolower(dat$establishmentMeans),tolower(translation_estabmeans$newTerm)) # identify matches with Darwin Core
       dat$establishmentMeans <- translation_estabmeans$newTerm[ind] # replace strings
       dat$establishmentMeans[is.na(ind)] <- "" # indicate mis-matches
     }
@@ -62,7 +62,7 @@ StandardiseTerms <- function(FileInfo){
     if (any(colnames(dat)=="occurrenceStatus")){
       dat$occurrenceStatus <- gsub("^\\s+|\\s+$", "",dat$occurrenceStatus) # trim leading and trailing whitespace
       # identify matches of alternative terms...
-      ind <- match(dat$occurrenceStatus,tolower(translation_occurrence$origTerm)) # identify matches
+      ind <- match(tolower(dat$occurrenceStatus),tolower(translation_occurrence$origTerm)) # identify matches
       unresolved_occurrenceStatus <- unique(dat$occurrenceStatus[is.na(ind)]) # store mis-matches
       resolved_occurrenceStatus <- unique(dat$occurrenceStatus[!is.na(ind)]) # store mis-matches
       translated <- translation_occurrence$newTerm[ind]
@@ -76,14 +76,14 @@ StandardiseTerms <- function(FileInfo){
     if (any(colnames(dat)=="degreeOfEstablishment")){
       dat$degreeOfEstablishment <- gsub("^\\s+|\\s+$", "",dat$degreeOfEstablishment) # trim leading and trailing whitespace
       # identify matches of alternative terms...
-      ind <- match(dat$degreeOfEstablishment,tolower(translation_degrEstab$origTerm)) # identify matches of translated terms
+      ind <- match(tolower(dat$degreeOfEstablishment),tolower(translation_degrEstab$origTerm)) # identify matches of translated terms
       unresolved_degreeOfEstablishment <- unique(dat$degreeOfEstablishment[is.na(ind)]) # store mis-matches
       resolved_degreeOfEstablishment <- unique(dat$degreeOfEstablishment[!is.na(ind)]) # store mis-matches
       translated <- translation_degrEstab$newTerm[ind]
       indNA <- is.na(translated)
       dat$degreeOfEstablishment[!indNA] <- translated[!indNA]  # replace strings
       # identify matches of Darwin Core
-      ind <- match(dat$degreeOfEstablishment,tolower(translation_degrEstab$newTerm)) # identify matches with Darwin Core
+      ind <- match(tolower(dat$degreeOfEstablishment),tolower(translation_degrEstab$newTerm)) # identify matches with Darwin Core
       dat$degreeOfEstablishment <- translation_degrEstab$newTerm[ind] # replace strings
       dat$degreeOfEstablishment[is.na(ind)] <- "" # indicate mis-matches
     }
@@ -92,14 +92,14 @@ StandardiseTerms <- function(FileInfo){
     if (any(colnames(dat)=="pathway")){
       dat$pathway <- gsub("^\\s+|\\s+$", "",dat$pathway) # trim leading and trailing whitespace
       # identify matches of alternative terms...
-      ind <- match(dat$pathway,tolower(translation_pathway$origTerm)) # identify matches of translated terms
+      ind <- match(tolower(dat$pathway),tolower(translation_pathway$origTerm)) # identify matches of translated terms
       unresolved_pathway <- unique(dat$pathway[is.na(ind)]) # store mis-matches
       resolved_pathway <- unique(dat$pathway[!is.na(ind)]) # store mis-matches
       translated <- translation_pathway$newTerm[ind]
       indNA <- is.na(translated)
       dat$pathway[!indNA] <- translated[!indNA]  # replace strings
       # identify matches of Darwin Core
-      ind <- match(dat$pathway,tolower(translation_pathway$newTerm)) # identify matches with Darwin Core
+      ind <- match(tolower(dat$pathway),tolower(translation_pathway$newTerm)) # identify matches with Darwin Core
       dat$pathway <- translation_pathway$newTerm[ind] # replace strings
       dat$pathway[is.na(ind)] <- "" # indicate mis-matches
     }
@@ -108,14 +108,14 @@ StandardiseTerms <- function(FileInfo){
     if (any(colnames(dat)=="habitat")){
       dat$habitat <- gsub("^\\s+|\\s+$", "",dat$habitat) # trim leading and trailing whitespace
       # identify matches of alternative terms...
-      ind <- match(dat$habitat,tolower(translation_habitat$origTerm)) # identify matches of translated terms
+      ind <- match(tolower(dat$habitat),tolower(translation_habitat$origTerm)) # identify matches of translated terms
       unresolved_habitat <- unique(dat$habitat[is.na(ind)]) # store mis-matches
-      resolved_habitat <- unique(dat$habitat[!is.na(ind)]) # store mis-matches
+      resolved_habitat <- unique(dat$habitat[!is.na(ind)]) # store matches
       translated <- translation_habitat$newTerm[ind]
       indNA <- is.na(translated)
       dat$habitat[!indNA] <- translated[!indNA]  # replace strings
       # identify matches of Darwin Core
-      ind <- match(dat$habitat,tolower(translation_habitat$newTerm)) # identify matches with Darwin Core
+      ind <- match(tolower(dat$habitat),tolower(translation_habitat$newTerm)) # identify matches with Darwin Core
       dat$habitat <- translation_habitat$newTerm[ind] # replace strings
       dat$habitat[is.na(ind)] <- "" # indicate mis-matches
     }
